@@ -1,0 +1,17 @@
+{
+  "block.horizons_unbound.reality_anchor": "Якорь реальности",
+  "block.horizons_unbound.hot_crust": "Горячая корка",
+  "entity.horizons_unbound.echo": "Эхо",
+  "item.horizons_unbound.tempered": "Закалено штормом",
+  "subtitles.horizons_unbound.storm.rumble": "Гул шторма",
+  "subtitles.horizons_unbound.storm.enter": "Стена шторма расступается",
+  "subtitles.horizons_unbound.storm.exit": "Выход из шторма",
+  "subtitles.horizons_unbound.storm.omen": "Поднимается ветер",
+  "subtitles.horizons_unbound.storm.merge": "Штормы сливаются",
+  "subtitles.horizons_unbound.inside.end": "Гул тишины",
+  "subtitles.horizons_unbound.inside.nether": "Гудит кузня",
+  "subtitles.horizons_unbound.inside.overworld": "Тихий ветер",
+  "subtitles.horizons_unbound.inside.deep_dark": "Сердце тьмы",
+  "subtitles.horizons_unbound.storm.sculk_pulse": "Шторм слушает",
+  "subtitles.horizons_unbound.storm.birth": "Рождается шторм"
+}

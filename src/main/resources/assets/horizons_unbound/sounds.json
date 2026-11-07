@@ -1,0 +1,101 @@
+{
+  "storm.rumble": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:rumble",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.storm.rumble"
+  },
+  "storm.enter": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:enter",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.storm.enter"
+  },
+  "storm.exit": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:exit",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.storm.exit"
+  },
+  "storm.omen": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:omen_wind",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.storm.omen"
+  },
+  "storm.merge": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:merge",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.storm.merge"
+  },
+  "inside.end": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:end_hum",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.inside.end"
+  },
+  "inside.nether": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:forge",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.inside.nether"
+  },
+  "inside.overworld": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:eye_wind",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.inside.overworld"
+  },
+  "inside.deep_dark": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:heartbeat",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.inside.deep_dark"
+  },
+  "storm.sculk_pulse": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:sculk_pulse",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.storm.sculk_pulse"
+  },
+  "storm.birth": {
+    "sounds": [
+      {
+        "name": "horizons_unbound:birth",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.horizons_unbound.storm.birth"
+  }
+}

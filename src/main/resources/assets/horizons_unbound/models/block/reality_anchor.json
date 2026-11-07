@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "horizons_unbound:block/reality_anchor"
+  }
+}

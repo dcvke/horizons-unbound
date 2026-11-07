@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "horizons_unbound:block/hot_crust"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "block.horizons_unbound.reality_anchor": "Reality Anchor",
+  "block.horizons_unbound.hot_crust": "Hot Crust",
+  "entity.horizons_unbound.echo": "Echo",
+  "item.horizons_unbound.tempered": "Storm-tempered",
+  "subtitles.horizons_unbound.storm.rumble": "Storm rumbles",
+  "subtitles.horizons_unbound.storm.enter": "Storm wall parts",
+  "subtitles.horizons_unbound.storm.exit": "Leaving the storm",
+  "subtitles.horizons_unbound.storm.omen": "Wind rises",
+  "subtitles.horizons_unbound.storm.merge": "Storms collide",
+  "subtitles.horizons_unbound.inside.end": "Silent hum",
+  "subtitles.horizons_unbound.inside.nether": "Forge roars",
+  "subtitles.horizons_unbound.inside.overworld": "Calm wind",
+  "subtitles.horizons_unbound.inside.deep_dark": "Heartbeat of the dark",
+  "subtitles.horizons_unbound.storm.sculk_pulse": "Storm listens",
+  "subtitles.horizons_unbound.storm.birth": "A storm is born"
+}

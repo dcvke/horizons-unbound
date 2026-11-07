@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "horizons_unbound:block/hot_crust"
+    },
+    "age=1": {
+      "model": "horizons_unbound:block/hot_crust"
+    },
+    "age=2": {
+      "model": "horizons_unbound:block/hot_crust"
+    },
+    "age=3": {
+      "model": "horizons_unbound:block/hot_crust"
+    }
+  }
+}
