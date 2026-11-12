@@ -1,0 +1,10 @@
+# No storm: the same view as birth, for comparing FPS and looks with other mods installed.
+/storm clear
+/time set 6000
+/tp @s 0 140 0 0 8
+wait 200
+shot base_00
+wait 100
+shot base_05
+wait 100
+shot base_10

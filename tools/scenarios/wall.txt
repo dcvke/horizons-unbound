@@ -1,0 +1,70 @@
+# Walking through a whole storm's wall, a shot every two blocks, then looking up from inside (the storm is 80 blocks ahead when spawned).
+/storm clear
+/time set 6000
+/gamemode spectator
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~ ~ 0 0
+wait 20
+/storm spawn overworld
+# its birth (20 s), then the discovery cutscene (22 s)
+wait 900
+/tp @s ~ ~2 ~62 0 -10
+wait 20
+/tp @s ~ ~ ~2
+wait 6
+shot wall_00
+/tp @s ~ ~ ~2
+wait 6
+shot wall_01
+/tp @s ~ ~ ~2
+wait 6
+shot wall_02
+/tp @s ~ ~ ~2
+wait 6
+shot wall_03
+/tp @s ~ ~ ~2
+wait 6
+shot wall_04
+/tp @s ~ ~ ~2
+wait 6
+shot wall_05
+/tp @s ~ ~ ~2
+wait 6
+shot wall_06
+/tp @s ~ ~ ~2
+wait 6
+shot wall_07
+/tp @s ~ ~ ~2
+wait 6
+shot wall_08
+/tp @s ~ ~ ~2
+wait 6
+shot wall_09
+/tp @s ~ ~ ~2
+wait 6
+shot wall_10
+/tp @s ~ ~ ~2
+wait 6
+shot wall_11
+/tp @s ~ ~ ~2
+wait 6
+shot wall_12
+/tp @s ~ ~ ~2
+wait 6
+shot wall_13
+/tp @s ~ ~ ~2
+wait 6
+shot wall_14
+/tp @s ~ ~ ~2
+wait 6
+shot wall_15
+/tp @s ~ ~ ~20 0 -60
+wait 20
+shot inside_up60
+/tp @s ~ ~ ~ 0 -35
+wait 10
+shot inside_up35
+/tp @s ~ ~ ~ 90 -20
+wait 10
+shot inside_side

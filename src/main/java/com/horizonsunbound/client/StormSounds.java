@@ -53,7 +53,7 @@ public final class StormSounds {
             // a storm just born: its birth sound, timed so the crack falls on the ignition
             if (s.age < 40 && BORN.add(s.id)) {
                 float v = Mth.clamp(1.2f - (float) s.dist(cam.x, cam.z) / (s.radius() * StormRenderer.CAP * 2.5f), .15f, 1);
-                mc.getSoundManager().play(new SimpleSoundInstance(ModSounds.BIRTH.get().getLocation(), SoundSource.AMBIENT, v, 1,
+                mc.getSoundManager().play(new SimpleSoundInstance(ModSounds.BIRTH.get().getLocation(), SoundSource.AMBIENT, v * StormConfig.VOLUME.get().floatValue(), 1,
                         SoundInstance.createUnseededRandom(), false, 0, SoundInstance.Attenuation.NONE, s.x, s.y + s.radius(), s.z, false));
             }
             Rumble r = RUMBLES.get(s.id);
@@ -115,7 +115,7 @@ public final class StormSounds {
         static float volume(Storm s, Vec3 cam) {
             float wall = (float) Math.max(0, s.dist(cam.x, cam.z) - s.radius()), range = s.radius() * StormRenderer.CAP * 1.3f;
             float v = Mth.clamp(1 - wall / range, 0, 1);
-            return v * v * .9f * (1 - .7f * InsideStorm.weight(s.type)) * StormBirth.presence(s.age / 20f);
+            return v * v * .9f * (1 - .7f * InsideStorm.weight(s.type)) * StormBirth.presence(s.age / 20f) * (1 - s.dying()) * StormConfig.VOLUME.get().floatValue();
         }
 
         @Override

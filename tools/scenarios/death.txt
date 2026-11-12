@@ -1,0 +1,34 @@
+# A storm's death and its cutscene: spawned whole (its birth and the discovery cutscene play out first), then ended.
+/storm clear
+/time set 6000
+/gamemode creative
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~ ~ 0 0
+wait 40
+/storm spawn overworld
+/tp @s ~ ~ ~-35 0 0
+# birth 20 s, then the discovery cutscene 22.5 s
+wait 900
+note ending it
+trace on
+/storm end
+wait 45
+shot death_t0.2_eyes
+wait 40
+shot death_t2.2_shoulder
+wait 40
+shot death_t4.2_back
+wait 30
+shot death_t5.7_far
+wait 40
+shot death_t7.7_far
+wait 30
+shot death_t9.2_shoulder
+wait 50
+shot death_t11.7_dip
+wait 40
+shot after_death
+wait 100
+/storm info
+wait 5

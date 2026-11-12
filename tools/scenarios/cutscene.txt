@@ -1,0 +1,51 @@
+# A storm's birth cutscene, triggered by standing close to a coming storm (creative, on the ground, sword in hand,
+# HUD on and punching as it starts: no first-person hand may show). Shots named by the storm's clock (0 = it rises).
+/storm clear
+/time set 6000
+/gamemode creative
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~ ~ 0 0
+/item replace entity @s weapon.mainhand with minecraft:diamond_sword
+hud on
+wait 120
+punch
+wait 5
+shot before_punching
+note announcing
+trace on
+/storm omen overworld
+wait 16
+shot t-9.3_pullout
+wait 21
+shot t-8.2_side
+wait 31
+shot t-6.6_hands
+wait 43
+shot t-4.4_lookup
+wait 47
+shot t-2_shoulder
+wait 69
+shot t+1.5_sparks
+wait 21
+shot t+2.6_flinch
+wait 13
+shot t+3.3_flinch
+wait 23
+shot t+4.5_wide
+wait 35
+shot t+6.3_crane
+wait 49
+shot t+8.8_tip
+wait 47
+shot t+11.2_hero
+wait 39
+shot t+13.2_braced
+wait 55
+shot t+16_title
+wait 89
+shot t+20.5_shoulder
+wait 59
+shot t+23.5_after
+/storm info
+wait 5

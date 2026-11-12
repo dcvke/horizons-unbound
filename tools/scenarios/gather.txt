@@ -1,0 +1,22 @@
+# The first seconds of a storm's birth (the gathering), seen from above and to the side, in close-set shots.
+/storm clear
+/time set 6000
+/tp @s 0 150 0 0 28
+wait 200
+/storm spawn overworld
+wait 7
+shot gather_0.4
+wait 7
+shot gather_0.8
+wait 7
+shot gather_1.2
+wait 7
+shot gather_1.6
+wait 5
+shot gather_1.9
+wait 5
+shot gather_2.2
+wait 3
+shot gather_2.4
+wait 9
+shot gather_2.9

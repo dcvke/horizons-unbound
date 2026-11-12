@@ -43,3 +43,28 @@ repo/
 output/
 *.mp4
 *.log
+
+### Test runs and generated deliverables ###
+run-*/
+dist/
+crash-reports/
+*.bak
+Thumbs.db
+
+### Local assistant instructions and notes ###
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+PORTING_PROMPT.md
+.claude/
+.codex/
+.cursor/
+.junie/
+.continue/
+.specstory/
+.cursorrules
+.windsurfrules
+.aider*
+.mcp.json
+.github/copilot-instructions.md
+graphify-out/

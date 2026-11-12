@@ -1,0 +1,29 @@
+# A cutscene from a cave deep underground: no way out for the camera, so it cuts through black to the surface and back.
+/storm clear
+/time set 6000
+/gamemode spectator
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~-40 ~ 0 0
+wait 20
+/fill ~-3 ~-1 ~-3 ~3 ~3 ~3 air
+wait 100
+note cave: announcing
+/storm omen overworld
+trace on
+wait 22
+shot cave_t-9_eyes
+wait 39
+shot cave_t-7_shoulder
+wait 99
+shot cave_t-2
+wait 59
+shot cave_t+1
+wait 219
+shot cave_t+12
+wait 159
+shot cave_t+20
+wait 49
+shot cave_t+22.5
+wait 21
+shot cave_after

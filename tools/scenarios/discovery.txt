@@ -1,0 +1,54 @@
+# Finding storms already out there: the first End storm gets its cutscene, a second End storm none, then a Nether storm its own.
+# /storm spawn rises right away with no cutscene (only natural storms are watched being born); found once whole (20 s).
+/storm clear
+/time set 6000
+/gamemode creative
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~ ~ 0 0
+hud on
+note first End storm
+/storm spawn end
+/tp @s ~ ~ ~-35 0 0
+trace on
+wait 400
+wait 20
+shot end_t1_eyes
+wait 40
+shot end_t3_shoulder
+wait 60
+shot end_t6_flight
+wait 60
+shot end_t9_near
+wait 60
+shot end_t12_orbit
+wait 40
+shot end_t14_title
+wait 50
+shot end_t16.5_high
+wait 40
+shot end_t18.5_wide
+wait 40
+shot end_t20.5_shoulder
+wait 40
+shot end_after
+trace off
+/storm clear
+note second End storm: no cutscene expected
+/storm spawn end
+wait 480
+shot end_again
+/storm clear
+note a Nether storm: its own cutscene
+/storm spawn nether
+wait 440
+shot nether_t2
+wait 80
+shot nether_t6
+wait 120
+shot nether_t12
+wait 40
+shot nether_t14_title
+wait 160
+/storm info
+wait 5

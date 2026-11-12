@@ -12,6 +12,10 @@ Install Java 21, then run the Gradle wrapper:
 
 The mod JAR is written to `build/libs/`. For local development, use the Gradle `runClient` task.
 
+## Addons, modpacks and servers
+
+Settings, data pack tags, resource packs, the API (events, custom storm effects, KubeJS) and notes on other mods: [docs/ADDONS.md](docs/ADDONS.md).
+
 ## Project status
 
 Development is ongoing. The internal mod ID is `horizons_unbound`. The current mod metadata says `All Rights Reserved`; choose an open-source license before making the repository public.

@@ -1,0 +1,43 @@
+# The birth cutscene's phrases: a shot inside each of several, to see the words against the acting (names: clock, phrase).
+/storm clear
+/time set 6000
+/gamemode creative
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~ ~ 0 0
+wait 120
+trace on
+/storm omen overworld
+wait 24
+shot p-8.9_quiet
+wait 19
+shot p-7.9_quiet2
+wait 27
+shot p-6.5_hands
+wait 19
+shot p-5.5_hands2
+wait 19
+shot p-4.5_hands3
+wait 19
+shot p-3.5_sky
+wait 39
+shot p-1.5_sky3
+wait 61
+shot p+1.6_sparks
+wait 25
+shot p+2.9_split
+wait 23
+shot p+4.1_split2
+wait 41
+shot p+6.2_type
+wait 39
+shot p+8.2_soon
+wait 67
+shot p+11.6_shake
+wait 59
+shot p+14.6_alive2
+wait 119
+shot p+20.6_inside
+wait 27
+shot p+22.0_inside2
+wait 60

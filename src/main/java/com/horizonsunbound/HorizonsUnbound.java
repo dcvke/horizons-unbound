@@ -1,6 +1,7 @@
 package com.horizonsunbound;
 
 import com.horizonsunbound.client.ClientStorms;
+import com.horizonsunbound.client.Cutscene;
 import com.horizonsunbound.client.StormConfig;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -8,6 +9,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.IEventBus;
@@ -17,6 +19,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.DirectionalPayloadHandler;
 
 import java.util.UUID;
 
@@ -27,6 +30,7 @@ public class HorizonsUnbound {
     public HorizonsUnbound(IEventBus modBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.CLIENT, StormConfig.SPEC);
         container.registerConfig(ModConfig.Type.COMMON, StormsConfig.SPEC);
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) com.horizonsunbound.client.ConfigScreen.register(container);
         ModContent.register(modBus);
         modBus.addListener(HorizonsUnbound::registerPayloads);
         NeoForge.EVENT_BUS.addListener(HorizonsUnbound::registerCommands);
@@ -34,35 +38,51 @@ public class HorizonsUnbound {
 
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {
         // ClientStorms is only touched when a packet arrives, which only happens on a client
-        event.registrar("1").playToClient(StormSyncPayload.TYPE, StormSyncPayload.CODEC, (payload, ctx) -> ClientStorms.accept(payload.storms()));
+        event.registrar("1").playToClient(StormSyncPayload.TYPE, StormSyncPayload.CODEC, (payload, ctx) -> ClientStorms.accept(payload.storms()))
+                .playBidirectional(StormCutscenes.Payload.TYPE, StormCutscenes.Payload.CODEC, new DirectionalPayloadHandler<>(
+                        (payload, ctx) -> Cutscene.start(payload.storm(), payload.mode()),
+                        (payload, ctx) -> StormCutscenes.stopped((ServerPlayer) ctx.player())));
     }
 
-    /** /storm spawn <type> [diameter], /storm natural (a natural spawn right now), /storm clear, /storm info */
+    /**
+     * /storm spawn <type> [diameter] (rises right away), /storm omen <type> [diameter] (omens first; rises with its
+     * cutscene once someone is close, and in front of the caller someone is), /storm end (the storms here start to
+     * die now), /storm grand (the great storm, in front of the caller), /storm natural (a natural spawn right
+     * now), /storm clear, /storm info
+     */
     private static void registerCommands(RegisterCommandsEvent event) {
-        LiteralArgumentBuilder<CommandSourceStack> spawn = Commands.literal("spawn");
+        LiteralArgumentBuilder<CommandSourceStack> spawn = Commands.literal("spawn"), omen = Commands.literal("omen");
         for (StormType type : StormType.values()) {
-            spawn.then(Commands.literal(type.id)
-                    .executes(c -> spawn(c.getSource(), type, Storm.DEFAULT_DIAMETER))
-                    .then(Commands.argument("diameter", IntegerArgumentType.integer(Storm.MIN_DIAMETER, Storm.MAX_DIAMETER))
-                            .executes(c -> spawn(c.getSource(), type, IntegerArgumentType.getInteger(c, "diameter")))));
+            for (boolean o : new boolean[] {false, true}) {
+                (o ? omen : spawn).then(Commands.literal(type.id)
+                        .executes(c -> spawn(c.getSource(), type, Storm.DEFAULT_DIAMETER, o))
+                        .then(Commands.argument("diameter", IntegerArgumentType.integer(Storm.MIN_DIAMETER, Storm.MAX_DIAMETER))
+                                .executes(c -> spawn(c.getSource(), type, IntegerArgumentType.getInteger(c, "diameter"), o))));
+            }
         }
         event.getDispatcher().register(Commands.literal("storm").requires(s -> s.hasPermission(2))
                 .then(spawn)
+                .then(omen)
                 .then(Commands.literal("natural").executes(c -> natural(c.getSource())))
                 .then(Commands.literal("twin").executes(c -> twin(c.getSource())))
                 .then(Commands.literal("clear").executes(c -> clear(c.getSource())))
+                .then(Commands.literal("end").executes(c -> end(c.getSource())))
+                .then(Commands.literal("debug").executes(c -> debug(c.getSource())))
+                .then(Commands.literal("grand").executes(c -> grand(c.getSource())))
                 .then(Commands.literal("info").executes(c -> info(c.getSource()))));
     }
 
-    private static int spawn(CommandSourceStack src, StormType type, int diameter) {
+    private static int spawn(CommandSourceStack src, StormType type, int diameter, boolean omen) {
         ServerLevel level = src.getLevel();
         // In front of the caller: far enough to see it whole, close enough to stay within the default view distance.
         Vec3 dir = Vec3.directionFromRotation(0, src.getRotation().y);
         double dist = diameter / 2.0 + 80;
         int x = Mth.floor(src.getPosition().x + dir.x * dist), z = Mth.floor(src.getPosition().z + dir.z * dist);
         int y = Storm.groundUnder(level, x + .5, z + .5, diameter / 2f, true);
-        StormManager.get(level).add(level, new Storm(UUID.randomUUID(), type, diameter, x + .5, y, z + .5));
-        src.sendSuccess(() -> Component.literal("Spawned " + type.id + " storm (" + diameter + " blocks) at " + x + " " + y + " " + z), true);
+        Storm storm = new Storm(UUID.randomUUID(), type, diameter, x + .5, y, z + .5);
+        if (omen) StormManager.get(level).announce(level, storm);
+        else StormManager.get(level).add(level, storm);
+        src.sendSuccess(() -> Component.literal((omen ? "Announced " : "Spawned ") + type.id + " storm (" + diameter + " blocks) at " + x + " " + y + " " + z), true);
         return 1;
     }
 
@@ -72,7 +92,7 @@ public class HorizonsUnbound {
             src.sendFailure(Component.literal("No free spot for a storm here (too close to players, beds, spawn or villages)"));
             return 0;
         }
-        src.sendSuccess(() -> Component.literal("A " + storm.type.id + " storm (" + storm.diameter + " blocks) is coming (a minute of omens) at "
+        src.sendSuccess(() -> Component.literal("A " + storm.type.id + " storm (" + storm.diameter + " blocks) is coming (omens first; it rises when someone comes close) at "
                 + Mth.floor(storm.x) + " " + Mth.floor(storm.y) + " " + Mth.floor(storm.z)), true);
         return 1;
     }
@@ -101,6 +121,38 @@ public class HorizonsUnbound {
         }
         src.sendSuccess(() -> Component.literal("A " + twin.type.id + " storm is coming to merge with the " + storms.get(0).type.id + " storm"), true);
         return 1;
+    }
+
+    /** /storm debug: each storm here with its age, life left and what its effects cost the server a tick. */
+    private static int debug(CommandSourceStack src) {
+        StormManager m = StormManager.get(src.getLevel());
+        float total = 0;
+        for (Storm s : m.storms()) {
+            total += s.cost;
+            src.sendSuccess(() -> Component.literal(String.format(java.util.Locale.ROOT, "%s%s storm at %d %d %d: %d s old, %d s of life left%s, effects %.3f ms/tick%s",
+                    s.grand ? "great " : "", s.type.id, (int) s.x, (int) s.y, (int) s.z, s.age / 20, s.life() / 20,
+                    s.dying() > 0 ? " (dying)" : "", s.cost / 1e6, s.broken ? ", STOPPED after an error (see the log)" : "")), false);
+        }
+        float sum = total;
+        src.sendSuccess(() -> Component.literal(String.format(java.util.Locale.ROOT, "%d storm(s), %d coming; effects %.3f ms/tick in all",
+                m.storms().size(), m.quiet() ? 0 : m.omenCount(), sum / 1e6)), false);
+        return m.storms().size();
+    }
+
+    /** /storm end: the storms here start to come apart now (their death, and its cutscene for whoever is close). */
+    private static int end(CommandSourceStack src) {
+        var storms = StormManager.get(src.getLevel()).storms();
+        for (Storm s : storms) s.life(Math.min(s.life(), Storm.DEATH + 40));
+        src.sendSuccess(() -> Component.literal(storms.size() + " storm(s) coming to an end"), true);
+        return storms.size();
+    }
+
+    /** /storm grand: the great storm, with its omens and birth, in front of the caller. */
+    private static int grand(CommandSourceStack src) {
+        int n = spawn(src, StormType.OVERWORLD, Storm.MAX_DIAMETER, true);
+        var omens = StormManager.get(src.getLevel());
+        omens.lastAnnounced().grand = true;
+        return n;
     }
 
     private static int clear(CommandSourceStack src) {

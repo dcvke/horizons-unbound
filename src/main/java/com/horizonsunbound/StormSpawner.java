@@ -25,18 +25,35 @@ public final class StormSpawner {
     private static final int MINUTE = 1200;                      // ticks
     private static final int KEEP_AWAY = 100;                    // blocks between the storm's edge and anything to protect
 
+    /**
+     * Once a second: while no storm is out, a countdown of minutesBetweenStorms runs (it waits while one is out, so it
+     * starts when the last one is gone); at its end a storm comes with stormChance, else it starts over. While one is
+     * out, a second may come to meet it, a few minutes after it rose.
+     */
     @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
-        long time = level.getGameTime();
-        if (time % MINUTE != 0 || level.players().isEmpty()) return;
+        if (level.getGameTime() % 20 != 0 || level.players().isEmpty()) return;
         StormManager m = StormManager.get(level);
-        // once every spawnInterval minutes of play (by default an hour), a storm comes with spawnChance (by default 50%)
-        if (time % (StormsConfig.SPAWN_INTERVAL.get() * (long) MINUTE) == 0) {
-            if (m.quiet() && level.random.nextDouble() < StormsConfig.SPAWN_CHANCE.get()) trySpawn(level);
-        } else if (m.storms().size() == 1 && level.random.nextDouble() < StormsConfig.MERGE_CHANCE.get()) {
-            tryTwin(level, m.storms().get(0)); // rarely a second storm comes, and the two run into each other
+        int interval = StormsConfig.SPAWN_INTERVAL.get() * 60; // seconds
+        if (!m.quiet()) {
+            m.calm = interval;
+            if (m.twinIn > 0 && m.storms().size() == 1 && --m.twinIn == 0) tryTwin(level, m.storms().get(0));
+            return;
         }
+        if (m.calm < 0 || m.calm > interval) m.calm = interval;
+        if (--m.calm > 0) return;
+        m.calm = interval;
+        m.setDirty();
+        if (level.random.nextDouble() >= StormsConfig.SPAWN_CHANCE.get()) return;
+        Storm s;
+        try {
+            s = trySpawn(level);
+        } catch (RuntimeException e) { // another mod's world generation in the way: skip this one, never crash
+            org.slf4j.LoggerFactory.getLogger("horizons_unbound").error("Horizons Unbound: a storm could not come", e);
+            s = null;
+        }
+        m.twinIn = s != null && !s.grand && level.random.nextDouble() < StormsConfig.MERGE_CHANCE.get() ? 120 + level.random.nextInt(300) : -1;
     }
 
     /**
@@ -45,7 +62,7 @@ public final class StormSpawner {
      */
     public static Storm tryTwin(ServerLevel level, Storm first) {
         List<ServerPlayer> players = level.players();
-        if (players.isEmpty() || first.target != null) return null;
+        if (players.isEmpty() || first.target != null || first.grand) return null;
         List<StormType> types = unlocked(players.get(level.random.nextInt(players.size())));
         if (types.size() > 1) types.remove(first.type);
         int diameter = Mth.nextInt(level.random, Storm.MIN_DIAMETER, Storm.MAX_DIAMETER);
@@ -58,8 +75,7 @@ public final class StormSpawner {
             Storm twin = new Storm(UUID.randomUUID(), types.get(level.random.nextInt(types.size())), diameter, x + .5, pos.getY(), z + .5);
             twin.target = first.id;
             first.target = twin.id;
-            StormManager.get(level).announce(level, twin);
-            return twin;
+            return StormManager.get(level).announce(level, twin) ? twin : null;
         }
         return null;
     }
@@ -69,8 +85,12 @@ public final class StormSpawner {
         List<ServerPlayer> players = level.players();
         if (players.isEmpty()) return null;
         ServerPlayer player = players.get(level.random.nextInt(players.size()));
-        int diameter = Mth.nextInt(level.random, Storm.MIN_DIAMETER, Storm.MAX_DIAMETER);
+        for (ServerPlayer p : players) if (StormCutscenes.finalePending(p)) player = p; // someone has met every kind: the great storm comes to them
+        boolean grand = StormCutscenes.finalePending(player);
+        int diameter = grand ? Storm.MAX_DIAMETER : Mth.nextInt(level.random, Storm.MIN_DIAMETER, Storm.MAX_DIAMETER);
         float r = diameter / 2f;
+        List<StormType> kinds = unlocked(player);
+        if (kinds.isEmpty()) return null; // every kind turned off
         int view = Math.min(level.getServer().getPlayerList().getViewDistance(), player.requestedViewDistance()) * 16;
         // the far edge of what the player sees, so it shows from afar; with a short view distance just far enough away
         double dist = Math.max(view - 24, r + KEEP_AWAY + 20);
@@ -78,12 +98,14 @@ public final class StormSpawner {
             float ang = level.random.nextFloat() * Mth.TWO_PI;
             int x = Mth.floor(player.getX() + Mth.cos(ang) * dist), z = Mth.floor(player.getZ() + Mth.sin(ang) * dist);
             BlockPos pos = new BlockPos(x, Storm.groundUnder(level, x + .5, z + .5, r, true), z);
-            if (!isClear(level, pos, r + KEEP_AWAY)) continue;
-            List<StormType> types = unlocked(player);
-            Storm storm = new Storm(UUID.randomUUID(), types.get(level.random.nextInt(types.size())), diameter, x + .5, pos.getY(), z + .5);
+            if (!isClear(level, pos, r + KEEP_AWAY) || !StormsConfig.biomeAllowed(level.getBiome(pos))) continue;
+            Storm storm = new Storm(UUID.randomUUID(), kinds.get(level.random.nextInt(kinds.size())), diameter, x + .5, pos.getY(), z + .5);
+            if (grand) {
+                storm.grand = true;
+                StormCutscenes.finaleCame(player);
+            }
             storm.setHeading(ang + (level.random.nextFloat() - .5f)); // roughly away from the player
-            StormManager.get(level).announce(level, storm); // a minute of omens first
-            return storm;
+            return StormManager.get(level).announce(level, storm) ? storm : null; // omens first; it rises when the player comes close
         }
         return null;
     }
@@ -98,6 +120,7 @@ public final class StormSpawner {
         if (all || done(player, "story/enter_the_nether")) out.add(StormType.NETHER);
         if (all || done(player, "story/enter_the_end")) out.add(StormType.END);
         if (all || player.getPersistentData().getBoolean(DEEP_DARK_SEEN)) out.add(StormType.DEEP_DARK);
+        out.removeIf(t -> !StormsConfig.allowed(t));
         return out;
     }
 

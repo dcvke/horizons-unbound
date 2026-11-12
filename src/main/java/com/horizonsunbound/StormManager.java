@@ -18,6 +18,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.common.NeoForge;
+import com.horizonsunbound.api.StormEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,13 +31,17 @@ import java.util.List;
  */
 @EventBusSubscriber(modid = HorizonsUnbound.MODID)
 public final class StormManager extends SavedData {
+    private static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger();
     public static final int ANCHOR_RADIUS = 8;
-    public static final int OMEN_TICKS = 1200; // a natural storm's omens show for a minute before it rises
+    public static final int OMEN_TICKS = 1200; // a natural storm's omens grow for a minute, then it waits to be seen
+    private static final int HOLD = 6000;      // ...for up to five minutes; if nobody came, it rises unseen
     private final List<Storm> storms = new ArrayList<>();
     private final List<Storm> omens = new ArrayList<>(); // storms about to rise
     private final LongOpenHashSet anchors = new LongOpenHashSet();  // reality anchors in this dimension
     private final List<long[]> streams = new ArrayList<>();         // {water source pos, game time it dries up}
     private boolean resync;
+    int calm = -1;   // seconds until the next storm may come (StormSpawner); -1: not set yet
+    int twinIn = -1; // seconds until a second storm comes to meet the first; -1: none
 
     public static StormManager get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(new Factory<>(StormManager::new, StormManager::load), "horizons_unbound");
@@ -45,18 +51,30 @@ public final class StormManager extends SavedData {
 
     public void add(ServerLevel level, Storm storm) {
         storms.add(storm);
+        NeoForge.EVENT_BUS.post(new StormEvent.Born(level, storm));
         if (level.dimension() == Level.OVERWORLD) startThunder(level);
         setDirty();
         sync(level);
     }
 
-    /** A natural storm: first a minute of omens (dark sky, rising wind, nervous animals), then it rises. */
-    public void announce(ServerLevel level, Storm storm) {
+    /**
+     * A natural storm: first its omens (dark sky, rising wind, nervous animals), then it rises once someone comes close
+     * (tickOmens). False if an addon cancelled it (StormEvent.Announce).
+     */
+    public boolean announce(ServerLevel level, Storm storm) {
+        if (NeoForge.EVENT_BUS.post(new StormEvent.Announce(level, storm)).isCanceled()) return false;
         storm.omen = OMEN_TICKS;
         omens.add(storm);
         setDirty();
         sync(level);
+        return true;
     }
+
+    /** How many storms are coming (omens showing). */
+    public int omenCount() { return omens.size(); }
+
+    /** The storm most recently announced (its omens showing), or null. */
+    public Storm lastAnnounced() { return omens.isEmpty() ? null : omens.get(omens.size() - 1); }
 
     public boolean quiet() { return storms.isEmpty() && omens.isEmpty(); }
 
@@ -101,9 +119,18 @@ public final class StormManager extends SavedData {
         if (m.quiet()) return;
         boolean ended = m.tickOmens(level);
         steer(m.storms);
-        ended |= m.storms.removeIf(s -> !s.tick(level));
+        ended |= m.storms.removeIf(s -> {
+            if (s.tick(level)) return false;
+            NeoForge.EVENT_BUS.post(new StormEvent.End(level, s));
+            return true;
+        });
+        for (Storm s : m.storms) {
+            if (s.life() != Storm.DEATH) continue;
+            NeoForge.EVENT_BUS.post(new StormEvent.Dying(level, s));
+            StormCutscenes.dying(level, s); // it starts to come apart
+        }
         ended |= m.merge(level);
-        for (Storm s : m.storms) StormEffects.tick(level, m, s);
+        for (Storm s : m.storms) effects(level, m, s);
         if (ended || m.resync || level.getGameTime() % 20 == 0) {
             m.resync = false;
             if (!m.storms.isEmpty() && level.dimension() == Level.OVERWORLD) startThunder(level);
@@ -112,19 +139,46 @@ public final class StormManager extends SavedData {
         }
     }
 
-    /** Counts omens down and lets them rise; meanwhile animals near the coming storm get restless. */
+    /**
+     * One storm's effects. If they throw (a bug here, or another mod's block or structure in the way) it must not take
+     * the server down: the error is logged and that storm stops acting on the world; it stays in the sky.
+     */
+    private static void effects(ServerLevel level, StormManager m, Storm s) {
+        if (s.broken) return;
+        long t0 = System.nanoTime();
+        try {
+            StormEffects.tick(level, m, s);
+        } catch (RuntimeException | LinkageError e) {
+            s.broken = true;
+            LOGGER.error("Horizons Unbound: a {} storm at {} {} {} stopped acting on the world after an error (it stays in the sky)",
+                    s.type.id, (int) s.x, (int) s.y, (int) s.z, e);
+        }
+        s.cost = s.cost * .95f + (System.nanoTime() - t0) * .05f;
+    }
+
+    /**
+     * Grows the omens, then holds them until a player comes close: then the storm's cutscene starts and it rises as
+     * the camera arrives (StormCutscenes). Meanwhile animals near the coming storm get restless.
+     */
     private boolean tickOmens(ServerLevel level) {
         if (omens.isEmpty()) return false;
         boolean rose = false;
         for (java.util.Iterator<Storm> it = omens.iterator(); it.hasNext(); ) {
             Storm o = it.next();
-            if (--o.omen <= 0) {
+            boolean watched = StormsConfig.CUTSCENES.get();
+            if (watched && o.cue < 0 && level.getGameTime() % 5 == 0 && StormCutscenes.trigger(level, o)) o.cue = StormCutscenes.PREROLL;
+            boolean rise;
+            if (o.cue >= 0) rise = --o.cue <= 0;
+            else if (o.omen > 1) { o.omen--; rise = false; }
+            else rise = !watched || ++o.held > HOLD; // without cutscenes nothing waits to be seen
+            if (rise) {
                 it.remove();
                 o.omen = 0;
                 storms.add(o);
+                NeoForge.EVENT_BUS.post(new StormEvent.Born(level, o));
                 if (level.dimension() == Level.OVERWORLD) startThunder(level);
                 rose = true;
-            } else if (o.omen % 20 == 0) StormEffects.restless(level, o);
+            } else if (level.getGameTime() % 20 == 0) StormEffects.restless(level, o);
         }
         return rose;
     }
@@ -148,7 +202,7 @@ public final class StormManager extends SavedData {
         for (int i = 0; i < storms.size(); i++) {
             for (int j = i + 1; j < storms.size(); j++) {
                 Storm a = storms.get(i), b = storms.get(j);
-                if (a.mix != null || b.mix != null || a.dist(b.x, b.z) > (a.radius() + b.radius()) * .45f) continue;
+                if (a.mix != null || b.mix != null || a.grand || b.grand || a.dist(b.x, b.z) > (a.radius() + b.radius()) * .45f) continue;
                 Storm big = a.diameter >= b.diameter ? a : b, small = big == a ? b : a;
                 Storm m = new Storm(big.id, big.type, Math.min(Storm.MAX_DIAMETER, big.diameter + small.diameter / 3),
                         (big.x * big.diameter + small.x * small.diameter) / (big.diameter + small.diameter), Math.min(big.y, small.y),
@@ -160,6 +214,7 @@ public final class StormManager extends SavedData {
                 m.setHeading(level.random.nextFloat() * net.minecraft.util.Mth.TWO_PI);
                 storms.remove(j);
                 storms.set(i, m);
+                NeoForge.EVENT_BUS.post(new StormEvent.Merge(level, m, a, b));
                 for (ServerPlayer p : level.players())
                     if (m.dist(p.getX(), p.getZ()) < m.zone() * 2) level.playSound(null, p.blockPosition(), ModSounds.MERGE.get(), net.minecraft.sounds.SoundSource.AMBIENT, 1.5f, 1);
                 return true;
@@ -217,6 +272,8 @@ public final class StormManager extends SavedData {
             (st.omen > 0 ? m.omens : m.storms).add(st); // omens are saved with their countdown
         }
         for (long a : tag.getLongArray("Anchors")) m.anchors.add(a);
+        m.calm = tag.contains("Calm") ? tag.getInt("Calm") : -1;
+        m.twinIn = tag.contains("TwinIn") ? tag.getInt("TwinIn") : -1;
         for (Tag t : tag.getList("Streams", Tag.TAG_LONG_ARRAY)) {
             long[] st = ((LongArrayTag) t).getAsLongArray();
             if (st.length == 2) m.streams.add(st);
@@ -231,6 +288,8 @@ public final class StormManager extends SavedData {
         for (Storm s : omens) list.add(s.save());
         tag.put("Storms", list);
         tag.putLongArray("Anchors", anchors.toLongArray());
+        tag.putInt("Calm", calm);
+        tag.putInt("TwinIn", twinIn);
         ListTag st = new ListTag();
         for (long[] s : streams) st.add(new LongArrayTag(s));
         tag.put("Streams", st);

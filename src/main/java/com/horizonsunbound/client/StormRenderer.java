@@ -4,6 +4,7 @@ import com.horizonsunbound.HorizonsUnbound;
 import com.horizonsunbound.Storm;
 import com.horizonsunbound.StormType;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.logging.LogUtils;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -38,7 +39,8 @@ import java.util.function.Function;
  */
 @EventBusSubscriber(modid = HorizonsUnbound.MODID, value = Dist.CLIENT)
 public final class StormRenderer {
-    private static final ResourceLocation WALL = tex("storm_wall"), BAND = tex("storm_band"), GLOW = tex("storm_glow");
+    private static final ResourceLocation WALL = tex("storm_wall"), BAND = tex("storm_band"), GLOW = tex("storm_glow"), FX = tex("storm_fx");
+    private static final int DOT = 0, BEAM = 1, RING = 2, SPARK = 3; // cells of storm_fx (tools/make_fx.py)
     private static final float TAU = Mth.TWO_PI;
     // Shape, in storm radii.
     private static final float HEIGHT = 3;    // column height, up to where it opens into the umbrella
@@ -62,7 +64,11 @@ public final class StormRenderer {
     private final float pulse, heard;
     // the storm's birth (StormBirth): all 1 / unlimited once it is whole
     private final boolean born;
-    private final float girth, tipY, fill, sway, capFront, arcsIn;
+    private final float capFront, arcsIn, spinUp;
+    private final float dying, capFade;       // its death: 0..1 through it; the cloud cap thinning at the end
+    private static final float WIDE = 3.4f;   // being born: how many times its width the vortex starts out
+    private final float wavePhase;            // ...and where along its height it closes in first
+    private final float outside;              // 0 with the camera inside the column, 1 well outside it, soft across the wall
     // light inside the cloud cap (see cloudLight()): where, how wide, how strong, which color
     private float litX, litZ, litR2 = 1, lit;
     private final float litCr, litCg, litCb;
@@ -70,7 +76,7 @@ public final class StormRenderer {
     private float pull;                       // blocks each glow vertex is pulled towards the camera, see Row.glow()                // ring brightness: 1, up to 3.5 while the column flares before a wave
     private final StormType type;
     private final long seed;
-    private final boolean camInside, inEye; // camera within the wall / truly inside the column (for the eye's sky)
+    private final boolean inEye;            // camera truly inside the column (for the eye's sky)
     private final FrustumIntersection view; // the screen, in camera-relative coordinates
     private final float fogR, fogG, fogB;
     private final float[] tilt = new float[TIERS + 1], tiltPhase = new float[TIERS + 1];
@@ -87,29 +93,29 @@ public final class StormRenderer {
         h = HEIGHT * r;
         t = (storm.age + partial) / 20f;
         born = storm.age >= Storm.BIRTH;
-        girth = born ? 1 : StormBirth.girth(t);
-        tipY = born ? -SINK : h - StormBirth.descend(t) * (h + SINK);
-        fill = born ? 1 : StormBirth.fill(t);
-        sway = born ? 0 : r * .22f * StormBirth.rope(t);
+        float closed = born ? 1 : StormBirth.descend(t);
+        dying = storm.dying();
+        spinUp = .35f * closed * closed * closed + .5f * dying * dying; // it turns faster as it tightens (kept on afterwards, so nothing jumps), and unwinds as it dies
+        capFade = 1 - smooth((dying - .55f) / .45f);
+        wavePhase = (storm.seed() & 255) / 40f;
         float unfurl = born ? 1 : StormBirth.unfurl(t);
-        capFront = born ? Float.MAX_VALUE : unfurl <= 0 ? -1 : r * (TOP * .6f + (CAP - TOP * .6f) * unfurl);
-        arcsIn = born ? 1 : StormBirth.arcs(t);
+        capFront = born ? dying > .3f ? r * (TOP * .6f + (CAP - TOP * .6f) * (1 - StormBirth.ease((dying - .3f) / .7f))) : Float.MAX_VALUE : unfurl <= 0 ? -1 : r * (TOP * .6f + (CAP - TOP * .6f) * unfurl);
+        arcsIn = born ? 1 - smooth(dying * 3) : StormBirth.arcs(t);
         sx = (float) Mth.lerp(partial, storm.xo, storm.x);
         sy = (float) Mth.lerp(partial, storm.yo, storm.y);
         sz = (float) Mth.lerp(partial, storm.zo, storm.z);
         float c = storm.charge(storm.age + partial);
         heard = heard(storm, partial);
-        pulse = 1 + 1.6f * c + 2 * heard + (born ? 0 : 2.5f * StormBirth.settle(t)); // a wave's warning, a sculk storm answering, the birth's last pulse
+        pulse = 1 + 1.6f * c + 2 * heard + (born ? 0 : 2.5f * StormBirth.settle(t) + 3 * StormBirth.snap(t)); // a wave's warning, a sculk storm answering, the birth's snap and last pulse
         litCr = (storm.type.glow >> 16 & 255) / 255f;
         litCg = (storm.type.glow >> 8 & 255) / 255f;
         litCb = (storm.type.glow & 255) / 255f;
         this.light = light;
         type = storm.type;
         seed = storm.seed();
-        // Inside = within the wall itself at the camera's height (its wobble and tier offsets included), so there is
-        // no gap between "outside" and "inside" where the near wall counts as a back face and the rings as hidden
-        // behind the column - crossing that gap made the storm vanish for a moment.
-        camInside = tx * tx + tz * tz < Mth.square(profile(Mth.clamp(-ty, 0, h)) * 1.04f);
+        // How far outside the wall the camera is, at its own height (under the cap). Soft across the wall: near it the
+        // wall thins like cloud, the far side and what the wall hid fade in, so walking through never blanks the storm.
+        outside = -ty > h ? 1 : smooth((Mth.sqrt(tx * tx + tz * tz) - profile(Mth.clamp(-ty, 0, h)) * 1.02f) / (r * .2f));
         inEye = tx * tx + tz * tz < Mth.square(r * .97f) && -ty > -SINK && -ty < h;
         float[] fog = RenderSystem.getShaderFogColor();
         fogR = fog[0];
@@ -130,10 +136,63 @@ public final class StormRenderer {
         cloudLight(storm.charge(storm.age + partial));
     }
 
+    private static final java.util.Set<java.util.UUID> FAILED = new java.util.HashSet<>(); // storms whose drawing threw: no longer drawn
+    private static java.lang.invoke.MethodHandle irisApi, irisInUse, irisPackName; // Iris's API and pack name, if Iris is there (looked up once)
+    private static boolean irisLooked;
+
+    /** True while an Iris shader pack is in use (asked through Iris's own API; false without Iris). */
+    static boolean shaderPack() {
+        if (!irisLooked) {
+            irisLooked = true;
+            try {
+                Class<?> api = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
+                var lookup = java.lang.invoke.MethodHandles.publicLookup();
+                irisApi = lookup.findStatic(api, "getInstance", java.lang.invoke.MethodType.methodType(api));
+                irisInUse = lookup.findVirtual(api, "isShaderPackInUse", java.lang.invoke.MethodType.methodType(boolean.class));
+                try {
+                    irisPackName = lookup.findStatic(Class.forName("net.irisshaders.iris.Iris"), "getCurrentPackName", java.lang.invoke.MethodType.methodType(String.class));
+                } catch (ReflectiveOperationException | LinkageError e) {
+                    irisPackName = null; // not part of Iris's public API: may go away; then auto means classic
+                }
+            } catch (ReflectiveOperationException | LinkageError e) {
+                irisApi = null;
+            }
+        }
+        if (irisApi == null) return false;
+        try {
+            return (boolean) irisInUse.invoke(irisApi.invoke());
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
+    /**
+     * True when the storm should be drawn with the plain textured shader, blended by alpha (StormConfig.SHADER_MODE):
+     * for packs like Photon, which treat beacon beams and glowing eyes as solid lit surfaces (the wall showed as a
+     * hole, the glow vanished). Other packs keep the beam/eyes shaders, which they draw as glowing.
+     */
+    static boolean forwardPack() {
+        if (!shaderPack()) return false;
+        StormConfig.ShaderMode mode = StormConfig.SHADER_MODE.get();
+        if (mode != StormConfig.ShaderMode.AUTO) return mode == StormConfig.ShaderMode.FORWARD;
+        try {
+            return irisPackName != null && String.valueOf(irisPackName.invoke()).toLowerCase(java.util.Locale.ROOT).contains("photon");
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
+    /**
+     * When the storm is drawn. Plain: after clouds and rain, so they don't paint over it (under a storm they're hidden
+     * anyway). With a shader pack: with the particles, a pass every pack composites (some packs drop what is drawn
+     * after the weather, and the storm vanished).
+     */
+    static RenderLevelStageEvent.Stage stage() { return shaderPack() ? RenderLevelStageEvent.Stage.AFTER_PARTICLES : RenderLevelStageEvent.Stage.AFTER_WEATHER; }
+
     // Drawn after clouds and rain, so they don't paint over the storm (under a storm they're hidden anyway).
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_WEATHER || ClientStorms.all().isEmpty()) return;
+        if (event.getStage() != stage() || ClientStorms.all().isEmpty()) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
         Vec3 cam = event.getCamera().getPosition();
@@ -149,7 +208,14 @@ public final class StormRenderer {
             // drawn while any part of it is within the view distance, and only when it's on screen at all
             if (Mth.sqrt(tx * tx + tz * tz) - reach > viewDistance) continue;
             if (!view.testAab(tx - reach, ty - SINK, tz - reach, tx + reach, ty + storm.radius() * HEIGHT + 10, tz + reach)) continue;
-            new StormRenderer(storm, tx, ty, tz, partial, light, view).draw();
+            if (FAILED.contains(storm.id)) continue;
+            try {
+                new StormRenderer(storm, tx, ty, tz, partial, light, view).draw();
+            } catch (RuntimeException e) { // never crash the game over a storm's looks: log it, drop the half-built mesh, stop drawing that storm
+                FAILED.add(storm.id);
+                Tesselator.getInstance().clear();
+                LogUtils.getLogger().error("Horizons Unbound: a storm could not be drawn and is hidden from now on", e);
+            }
         }
     }
 
@@ -161,7 +227,7 @@ public final class StormRenderer {
     private void draw() {
         // The wall isn't depth-sorted (thousands of quads every frame); instead the far part goes first:
         // seen from below the cap is behind the column, seen from above it covers it.
-        RenderType wallType = Types.WALL.apply(WALL);
+        RenderType wallType = Types.wall(WALL);
         BufferBuilder wall = begin(wallType);
         if (ty + h > 0) {
             umbrella(wall);
@@ -173,25 +239,29 @@ public final class StormRenderer {
             pixelRim(wall);
         }
         end(wall, wallType);
-        RenderType glowType = Types.GLOW.apply(GLOW);
+        RenderType glowType = Types.glow(GLOW);
         BufferBuilder glow = begin(glowType);
         rings(glow, false);
         wave(glow, false);
-        birth(glow, false);
         seams(glow, false);
         stars(glow);
         aurora(glow);
         end(glow, glowType);
-        RenderType coreType = Types.GLOW.apply(BAND);
+        RenderType coreType = Types.glow(BAND);
         BufferBuilder core = begin(coreType);
         rings(core, true);
         wave(core, true);
-        birth(core, true);
         seams(core, true);
         end(core, coreType);
+        if (!born || dying > 0) { // the birth's (or death's) light: soft glows, never a hard edge
+            RenderType fxType = Types.glow(FX);
+            BufferBuilder fx = begin(fxType);
+            birth(fx);
+            end(fx, fxType);
+        }
         // The arcs inside the cloud cap shine through the cloud itself (from above and from the side too); only the
         // column hides the far ones (front()). They hang hundreds of blocks up, where no terrain stands in front.
-        RenderType arcGlow = Types.THROUGH.apply(GLOW), arcCore = Types.THROUGH.apply(BAND);
+        RenderType arcGlow = Types.through(GLOW), arcCore = Types.through(BAND);
         BufferBuilder arcs = begin(arcGlow);
         arcs(arcs, false);
         end(arcs, arcGlow);
@@ -200,7 +270,7 @@ public final class StormRenderer {
         end(arcs, arcCore);
     }
 
-    static RenderType glowType() { return Types.GLOW.apply(GLOW); }
+    static RenderType glowType() { return Types.glow(GLOW); }
 
     /**
      * Inside an End storm the dark lid over the column's mouth turns into a piece of night sky: stars twinkling
@@ -227,7 +297,7 @@ public final class StormRenderer {
      * the underside of the cloud, shimmering. Drawn while the camera is under the cap.
      */
     private void aurora(VertexConsumer vc) {
-        if (arcsIn <= 0) return;
+        if (arcsIn * outside <= 0) return; // (from inside the column the wall hides it)
         if (type != StormType.OVERWORLD || tx * tx + tz * tz > Mth.square(r * CAP)) return;
         pull = 0;
         int[] colors = {0x46FF9A, 0x40E8FF, 0x6A8CFF};
@@ -237,7 +307,7 @@ public final class StormRenderer {
             for (int i = 0; i <= RING_SEG; i++) {
                 float ang = i * TAU / RING_SEG, rad = base + r * .12f * Mth.sin(ang * 3 + t * .25f + k);
                 float x = rad * Mth.cos(ang), z = rad * Mth.sin(ang), shimmer = .6f + .4f * Mth.sin(ang * 5 - t * .6f + k * 2);
-                float a = .9f * shimmer * arcsIn, hz = haze(tx + x, ty + top, tz + z), u = i * 6f / RING_SEG;
+                float a = .9f * shimmer * arcsIn * outside, hz = haze(tx + x, ty + top, tz + z), u = i * 6f / RING_SEG;
                 rowA.glow(i, x, top - depth, z, u, 0, colors[k], 0, hz);
                 rowB.glow(i, x, top, z, u, 1, colors[k], a, hz);
             }
@@ -247,55 +317,138 @@ public final class StormRenderer {
     }
 
     /**
-     * The new parts of a storm's birth (StormBirth): sparks spiralling in to a seed of light, the beam it fires up
-     * the full height, the flash on the ground. A few dozen quads, and only for the first seconds.
+     * The light of a storm's birth (StormBirth), all of it soft (storm_fx: glows that fade out to nothing):
+     * sparks with little trails spiralling in to a seed of light that pools on the ground, a ring of light rushing
+     * out at ignition, the beam (a white-hot core in a wide halo, flaring where it hits the sky), motes swept round
+     * with the vortex as it closes in, and as it shuts a flash, a ring rolling out over the ground and a burst of embers.
+     * A few hundred quads, and only for the first seconds.
      */
-    private void birth(VertexConsumer vc, boolean core) {
-        if (born) return;
-        float len = Mth.sqrt(tx * tx + tz * tz) + 1e-3f, px = tz / len, pz = -tx / len; // across the view, horizontal
-        int glow = core ? type.core : type.glow;
+    private void birth(VertexConsumer vc) {
+        var cam = Minecraft.getInstance().gameRenderer.getMainCamera();
+        org.joml.Vector3f left = cam.getLeftVector(), up = cam.getUpVector();
+        lx = left.x(); ly = left.y(); lz = left.z();
+        ux = up.x(); uy = up.y(); uz = up.z();
+        if (born) { // dying: motes of light lifting off where the column comes apart, drifting up into the thinning cloud
+            float front = Mth.clamp(dying * 1.6f - .45f, 0, 1) * h, fadeOut = 1 - smooth((dying - .8f) / .2f);
+            RandomSource rnd = RandomSource.create(seed * 17);
+            for (int i = 0; i < 56; i++) {
+                float ang = rnd.nextFloat() * TAU + t * (.2f + .3f * rnd.nextFloat()), up2 = frac(t * .22f + rnd.nextFloat());
+                float y = Math.min(front + up2 * r * .9f, h), rad = profile(y) * (.85f + .35f * rnd.nextFloat());
+                sprite(vc, DOT, rad * Mth.cos(ang), y, rad * Mth.sin(ang), 4 + 7 * up2, type.glow, Mth.sin(Mth.PI * up2) * fadeOut * .35f);
+            }
+            return;
+        }
+        ux = up.x(); uy = up.y(); uz = up.z();
+        int glow = type.glow, core = type.core;
         float gather = StormBirth.gather(t);
-        if (gather > 0) {
+        if (gather > 0) { // the gathering: the storm's footprint lights up on the ground and winds itself in to the seed
+            float g = Mth.clamp(t / StormBirth.IGNITION, 0, 1), in = g * g; // slow at first, then rushing
             RandomSource rnd = RandomSource.create(seed * 7);
-            for (int i = 0; i < 64; i++) { // sparks drawn in from all around, spiralling to the centre
-                float delay = rnd.nextFloat() * .8f, ang0 = rnd.nextFloat() * TAU, y0 = rnd.nextFloat() * h * .6f, far = .5f + rnd.nextFloat() * .5f;
-                float u = Mth.clamp((t - delay) / 1.5f, 0, 1);
-                if (u <= 0 || u >= 1) continue;
-                float rad = r * CAP * far * (float) Math.pow(1 - u, 1.6) + r * .03f, ang = ang0 + u * 3;
-                float k = Mth.sin(Mth.PI * u) * gather * (core ? 1 : .7f), size = core ? 1.2f : 3.5f;
-                billboard(vc, px, pz, rad * Mth.cos(ang), y0 * (1 - u) + 1, rad * Mth.sin(ang), size, size * 2.5f, glow, k);
+            for (int i = 0; i < 3; i++) { // rings of light closing in over the ground, one after another, quicker each time
+                float ph = frac(t * (.5f + .7f * g) + i / 3f);
+                flatFx(vc, RING, 0, .5f, 0, r * 3.2f * (1 - ph) + r * .2f, glow, Mth.sin(Mth.PI * ph) * gather * (.35f + .5f * g));
+            }
+            for (int arm = 0; arm < 5; arm++) { // five arms of motes, a little galaxy turning ever faster as it tightens
+                for (int j = 1; j <= 16; j++) {
+                    float q = j / 16f, rad = r * 1.7f * q * (1 - .9f * in) + r * .04f;
+                    float ang = arm * TAU / 5 + q * 2.6f + t * (.8f + 3.5f * in), y = 1.2f + q * r * .12f * (1 - in) + .6f * Mth.sin(t * 3 + j);
+                    float k = gather * (.35f + .65f * g) * (1 - .5f * q);
+                    sprite(vc, DOT, rad * Mth.cos(ang), y, rad * Mth.sin(ang), 6 - 2.5f * q, glow, k * .4f);
+                    sprite(vc, DOT, rad * Mth.cos(ang), y, rad * Mth.sin(ang), 1.8f, core, k);
+                }
+            }
+            for (int i = 0; i < 44; i++) { // sparks lifting off the ground inside the footprint and bending in towards the seed
+                float ang0 = rnd.nextFloat() * TAU, d0 = r * (.25f + 1.1f * Mth.sqrt(rnd.nextFloat())), off = rnd.nextFloat(), top = r * (.25f + .4f * rnd.nextFloat());
+                float life = frac(t * (.45f + .5f * g) + off), d = d0 * (1 - life * life * (.5f + .5f * g)), ang = ang0 + life * 1.5f;
+                float k = Mth.sin(Mth.PI * life) * gather * (.4f + .6f * g);
+                sprite(vc, SPARK, d * Mth.cos(ang), 1 + top * life * life, d * Mth.sin(ang), 2.2f + 2 * life, core, k * .9f);
             }
         }
         float seedK = StormBirth.seed(t);
-        if (seedK > 0) billboard(vc, px, pz, 0, 2, 0, r * (core ? .06f : .2f) * (1 + seedK), r * (core ? .06f : .2f) * (1 + seedK), glow, seedK * 1.5f);
+        if (seedK > 0) {
+            sprite(vc, DOT, 0, 2, 0, r * .6f * (.6f + seedK), glow, seedK * .55f);
+            sprite(vc, DOT, 0, 2, 0, r * .14f * (.6f + seedK), core, seedK * 1.5f);
+            flatFx(vc, DOT, 0, .4f, 0, r * 1.1f, glow, seedK * .45f); // its light pooling on the ground
+        }
+        float ig = (t - StormBirth.IGNITION) / 1.2f;
+        if (ig > 0 && ig < 1) { // a ring of light rushing out over the ground at ignition
+            flatFx(vc, RING, 0, .6f, 0, r * (.4f + 4 * StormBirth.ease(ig)), glow, (1 - ig) * (1 - ig) * 1.3f);
+            flatFx(vc, RING, 0, .7f, 0, r * (.3f + 3.6f * StormBirth.ease(ig)), core, (1 - ig) * (1 - ig) * .7f);
+        }
         float beam = StormBirth.beam(t);
         if (beam > 0) { // the beam, as tall as the storm will be
-            float top = StormBirth.beamHeight(t) * (h + 40);
-            billboard(vc, px, pz, 0, -SINK + (top + SINK) / 2, 0, r * (core ? .05f : .2f), top + SINK, glow, beam * (core ? 1.4f : 1));
+            float top = StormBirth.beamHeight(t) * (h + 40), flick = .85f + .15f * Mth.sin(t * 41) * Mth.sin(t * 23);
+            float len = Mth.sqrt(tx * tx + tz * tz) + 1e-3f, px = tz / len, pz = -tx / len; // across the view, horizontal
+            pillar(vc, px, pz, -SINK, top, r * .55f, glow, beam * .5f);
+            pillar(vc, px, pz, -SINK, top, r * .16f, glow, beam);
+            pillar(vc, px, pz, -SINK, top, r * .045f, core, beam * 1.6f * flick);
+            float hit = (t - StormBirth.IGNITION - .2f) / 1.5f; // it splashes against the sky
+            if (hit > 0 && hit < 1) sprite(vc, DOT, 0, top, 0, r * (1 + 2 * hit), glow, beam * (1 - hit) * 1.2f);
+            sprite(vc, DOT, 0, 2, 0, r * .5f, core, beam * .5f * flick);
         }
         float dust = StormBirth.dust(t);
-        if (dust > 0) { // dust whirling up from the ground to meet the funnel coming down, spreading as it rises
+        if (dust > 0) { // motes of light swept round with the vortex, faster and faster as it closes in
             RandomSource rnd = RandomSource.create(seed * 13);
-            for (int i = 0; i < 48; i++) {
-                float ang0 = rnd.nextFloat() * TAU, off = rnd.nextFloat(), spinV = 1.2f + rnd.nextFloat();
-                float life = frac(t * .3f + off), y = life * r * .9f, rad = r * girth * (.2f + .8f * life), ang = ang0 + t * spinV;
-                float k = dust * Mth.sin(Mth.PI * life) * (core ? .55f : .35f), size = (core ? 1.5f : 4) * (1 + 2 * life);
-                billboard(vc, px, pz, swayX(y) + rad * Mth.cos(ang), y, swayZ(y) + rad * Mth.sin(ang), size, size, glow, k);
+            float turned = t * .5f + spinUp * 40;
+            for (int i = 0; i < 64; i++) {
+                float ang = rnd.nextFloat() * TAU + turned * (.7f + .6f * rnd.nextFloat()), y = rnd.nextFloat() * h * .85f;
+                float rad = profile(y) * (.8f + .35f * rnd.nextFloat()), k = dust * (.5f + .5f * Mth.sin(t * 3 + i));
+                sprite(vc, DOT, rad * Mth.cos(ang), y + r * .05f * Mth.sin(t + i), rad * Mth.sin(ang), 5 + 9 * rnd.nextFloat(), glow, k * .32f);
             }
         }
         float flash = StormBirth.flash(t);
-        if (flash > 0 && !core) flat(vc, tx, ty + 1, tz, r * 5 * (1.2f - flash * .2f), glow, flash);
+        if (flash > 0) {
+            flatFx(vc, DOT, 0, 1, 0, r * 5 * (1.2f - flash * .2f), glow, flash * .9f);
+            sprite(vc, DOT, 0, r * .2f, 0, r * 1.6f, core, flash * .5f);
+        }
+        float shock = StormBirth.shock(t);
+        if (shock >= 0) flatFx(vc, RING, 0, .8f, 0, storm.zone() * 2 * shock + r, glow, (1 - shock) * 1.1f); // rolling out over the ground
+        float burst = t - StormBirth.TOUCHDOWN;
+        if (burst > 0 && burst < 2.5f) { // embers flung out of the touchdown
+            RandomSource rnd = RandomSource.create(seed * 19);
+            float k = 1 - burst / 2.5f;
+            for (int i = 0; i < 48; i++) {
+                float ang = rnd.nextFloat() * TAU, sp = r * (.4f + rnd.nextFloat() * .8f), vy = r * (.3f + rnd.nextFloat() * .7f);
+                float d = sp * burst, y = Math.max(1, vy * burst - r * .35f * burst * burst), x = d * Mth.cos(ang), z = d * Mth.sin(ang);
+                sprite(vc, DOT, x, y, z, 6, glow, k * .5f);
+                sprite(vc, DOT, x, y, z, 2, core, k * 1.2f);
+            }
+        }
     }
 
-    /** A glowing rectangle standing upright, turned across the view (storm-local centre, width w, height ht). */
-    private void billboard(VertexConsumer vc, float px, float pz, float x, float y, float z, float w, float ht, int rgb, float k) {
-        int color = argb(1, (rgb >> 16 & 255) / 255f * k, (rgb >> 8 & 255) / 255f * k, (rgb & 255) / 255f * k);
-        float hw = w / 2, hh = ht / 2, cx = tx + x, cy = ty + y, cz = tz + z;
-        vertex(vc, cx - px * hw, cy - hh, cz - pz * hw, 0, 0, color);
-        vertex(vc, cx + px * hw, cy - hh, cz + pz * hw, 0, 1, color);
-        vertex(vc, cx + px * hw, cy + hh, cz + pz * hw, 1, 1, color);
-        vertex(vc, cx - px * hw, cy + hh, cz - pz * hw, 1, 0, color);
+    private float lx, ly, lz, ux, uy, uz; // the camera's left and up, for sprites
+
+    /** A soft glow facing the camera (storm-local centre, world size): one cell of storm_fx. */
+    private void sprite(VertexConsumer vc, int cell, float x, float y, float z, float size, int rgb, float k) {
+        float s = size / 2, cx = tx + x, cy = ty + y, cz = tz + z, u0 = (cell & 1) * .5f + .004f, v0 = (cell >> 1) * .5f + .004f, u1 = u0 + .492f, v1 = v0 + .492f;
+        int color = fxColor(rgb, k);
+        vertex(vc, cx + (lx - ux) * s, cy + (ly - uy) * s, cz + (lz - uz) * s, u0, v1, color);
+        vertex(vc, cx + (-lx - ux) * s, cy + (-ly - uy) * s, cz + (-lz - uz) * s, u1, v1, color);
+        vertex(vc, cx + (-lx + ux) * s, cy + (-ly + uy) * s, cz + (-lz + uz) * s, u1, v0, color);
+        vertex(vc, cx + (lx + ux) * s, cy + (ly + uy) * s, cz + (lz + uz) * s, u0, v0, color);
     }
+
+    /** The beam cell standing upright on the storm's axis, turned across the view, from y0 to y1. */
+    private void pillar(VertexConsumer vc, float px, float pz, float y0, float y1, float w, int rgb, float k) {
+        int color = fxColor(rgb, k);
+        float hw = w / 2, u0 = .504f, u1 = .996f, v0 = .004f, v1 = .496f;
+        vertex(vc, tx - px * hw, ty + y0, tz - pz * hw, u0, v1, color);
+        vertex(vc, tx + px * hw, ty + y0, tz + pz * hw, u1, v1, color);
+        vertex(vc, tx + px * hw, ty + y1, tz + pz * hw, u1, v0, color);
+        vertex(vc, tx - px * hw, ty + y1, tz - pz * hw, u0, v0, color);
+    }
+
+    /** A soft glow lying flat (storm-local centre, world size): one cell of storm_fx. */
+    private void flatFx(VertexConsumer vc, int cell, float x, float y, float z, float size, int rgb, float k) {
+        float s = size / 2, cx = tx + x, cy = ty + y, cz = tz + z, u0 = (cell & 1) * .5f + .004f, v0 = (cell >> 1) * .5f + .004f, u1 = u0 + .492f, v1 = v0 + .492f;
+        int color = fxColor(rgb, k);
+        vertex(vc, cx - s, cy, cz - s, u0, v0, color);
+        vertex(vc, cx + s, cy, cz - s, u1, v0, color);
+        vertex(vc, cx + s, cy, cz + s, u1, v1, color);
+        vertex(vc, cx - s, cy, cz + s, u0, v1, color);
+    }
+
+    private static int fxColor(int rgb, float k) { return argb(1, (rgb >> 16 & 255) / 255f * k, (rgb >> 8 & 255) / 255f * k, (rgb & 255) / 255f * k); }
 
     /** True if a vertical cylinder (storm-local centre x/z, radius rad, heights y0..y1) can be on screen at all. */
     private boolean onScreen(float x, float z, float rad, float y0, float y1) {
@@ -371,25 +524,34 @@ public final class StormRenderer {
     /** Column radius at height y (ignoring tiers): straight, opening up in the top fifth. */
     private float profile(float y) {
         float q = Math.max(0, (y / h - .8f) / .2f);
-        return r * (1 + (TOP - 1) * q * q) * girth * form(y);
+        return r * (1 + (TOP - 1) * q * q) * wide(y);
     }
 
     /**
-     * Width of a newborn storm's funnel at height y as a share of its full width: nothing below its tip as it comes
-     * down out of the cloud, a rope narrowing to that tip, filling out into the straight column once it touches down.
+     * A newborn storm closes in: 0 when the vortex at height y starts to form, 1 when it has shut into the column.
+     * It starts a little earlier or later along its height (a slow ripple), but all of it shuts at the same moment.
      */
-    private float form(float y) {
-        if (born) return 1;
-        float u = (y - tipY) / Math.max(h - tipY, 1);
-        if (u < 0) return 0;
-        u = Math.min(u, 1);
-        return Mth.lerp(fill, .08f + .92f * (1 - (1 - u) * (1 - u)), 1);
+    private float closing(float y) {
+        float start = StormBirth.DESCENT + .9f * (.5f + .5f * Mth.sin(y / h * 7 + wavePhase));
+        return (t - start) / (StormBirth.TOUCHDOWN - start);
     }
 
-    /** Sideways sway of a newborn funnel at height y: held by the cloud, the tip swinging like a rope. */
-    private float swayX(float y) { return sway == 0 ? 0 : sway * (1 - Mth.clamp(y / h, 0, 1)) * Mth.sin(y / h * 5 + t * 1.3f); }
+    /** Width at height y as a multiple of the whole storm's: a wide vortex tightening ever faster, a pinch as it shuts, settling. */
+    private float wide(float y) {
+        if (born) return 1 + .8f * dying * dying; // dying, it unwinds and spreads out
+        float u = closing(y);
+        if (u <= 0) return WIDE;
+        if (u < 1) return 1 + (WIDE - 1) * (1 - u * u * u);
+        float after = t - StormBirth.TOUCHDOWN;
+        return 1 - .1f * (float) Math.exp(-after * 2.2f) * Mth.sin(after * 6);
+    }
 
-    private float swayZ(float y) { return sway == 0 ? 0 : sway * (1 - Mth.clamp(y / h, 0, 1)) * Mth.cos(y / h * 4 + t * 1.1f + 1); }
+    /** How solid a newborn storm is at height y: a ghost of a vortex at first, whole as it shuts. */
+    private float vis(float y) {
+        if (born) return dying <= 0 ? 1 : smooth((y / h - (dying * 1.6f - .45f)) / .25f); // dying, it lifts off the ground and comes apart upwards
+        float u = closing(y);
+        return u <= 0 ? 0 : u >= 1 ? 1 : smooth(u * 2.5f) * (.2f + .8f * u * u * u);
+    }
 
     /** Height of the seam under tier k (k = 0 is the bottom of the wall, TIERS its top), slightly tilted. */
     private float seam(int k, float ang) {
@@ -412,26 +574,24 @@ public final class StormRenderer {
         for (int k = 0; k < TIERS; k++) {
             // a whole tier off screen is skipped before any of its vertices are worked out
             float ylo = -SINK + k * (h + SINK) / TIERS - tilt[k], yhi = -SINK + (k + 1) * (h + SINK) / TIERS + tilt[k + 1];
-            if (yhi < tipY || !onScreen(offX[k], offZ[k], profile(Math.max(yhi, 0)) * 1.03f + sway, ylo, yhi)) continue;
-            float u0 = -frac(t * spin[k] * reps);
+            if (!onScreen(offX[k], offZ[k], (born ? profile(Math.max(yhi, 0)) : r * TOP * WIDE) * 1.03f, ylo, yhi)) continue;
+            float u0 = -frac((t * spin[k] + spinUp) * reps);
             Row prev = rowA, cur = rowB;
             for (int j = 0; j <= TIER_ROWS; j++) {
                 float s = j / (float) TIER_ROWS;
                 for (int i = 0; i < n; i++) {
                     float c = cs[i], si = sn[i], y = Mth.lerp(s, seams[k * n + i], seams[(k + 1) * n + i]);
                     float rad = profile(y) * (1 + .015f * Mth.sin(3 * i * TAU / COLUMN_SEG + y * .04f - t * .5f));
-                    float x = offX[k] + swayX(y) + rad * c, z = offZ[k] + swayZ(y) + rad * si;
+                    float x = offX[k] + rad * c, z = offZ[k] + rad * si;
                     float px = tx + x, py = ty + y, pz = tz + z, d = Mth.sqrt(px * px + py * py + pz * pz);
                     // facing: outward normal . (point - camera); > 0 means the camera sees the wall's back
                     float facing = c * px + si * pz;
-                    boolean back = !camInside && facing > 0 && facing * facing > .0625f * (px * px + pz * pz);
-                    // seen edge-on the wall thins out like a cloud; 0 alpha on the back lets strip() skip it
-                    float a = back ? 0 : .92f * (d < 1e-3f ? 1 : .3f + .7f * smooth(Math.abs(facing) / d / .45f));
+                    boolean back = facing > 0 && facing * facing > .0625f * (px * px + pz * pz);
+                    // seen edge-on, and right by the camera, the wall thins out like a cloud; from outside its back
+                    // is unseen (0 alpha lets strip() skip it)
+                    float a = (back ? 1 - outside : 1) * .92f * (d < 1e-3f ? 1 : .3f + .7f * smooth(Math.abs(facing) / d / .45f))
+                            * (.3f + .7f * smooth(d / (r * .3f))) * vis(y);
                     float shade = tone[k] * (.82f + .18f * Mth.clamp(y / h, 0, 1)) * light; // a bit lighter higher up
-                    if (y < tipY) { // being born: the funnel hasn't come down this far yet
-                        y = tipY;
-                        a = 0;
-                    }
                     cur.put(i, x, y, z, u0 + i * reps / (float) COLUMN_SEG, v0 + y / 96);
                     cur.wallColor(i, shade, a, hazeAt(d));
                 }
@@ -472,7 +632,7 @@ public final class StormRenderer {
         // In the eye of an Overworld storm the lid over the column's mouth is left out: clear sky up there.
         int j0 = inEye && type == StormType.OVERWORLD ? Mth.ceil(.15f / (SOLID + .15f) * CAP_ROWS) : 0;
         for (int j = j0; j <= CAP_ROWS; j++) {
-            float q = j / (float) CAP_ROWS * (SOLID + .15f) - .15f, rad = capRadius(q), y = capHeight(q), shade = capShade(q) * light, aw = .95f;
+            float q = j / (float) CAP_ROWS * (SOLID + .15f) - .15f, rad = capRadius(q), y = capHeight(q), shade = capShade(q) * light, aw = .95f * capFade;
             if (rad > capFront) { // being born: the cloud hasn't spread this far yet
                 rad = capFront;
                 aw = 0;
@@ -508,7 +668,7 @@ public final class StormRenderer {
             float hz = haze((ax + cx) / 2, (y0 + y1) / 2, (az + cz) / 2), shade = runs[p + 10] * light;
             float l = litAt(r0 * (c0 + c1) * .5f, r0 * (s0 + s1) * .5f) * (1 - hz);
             float w = l * l * .6f; // white core of the flash
-            int color = argb(runs[p + 11], Mth.lerp(hz, WALL_R * shade, fogR) + l * litCr + w, Mth.lerp(hz, WALL_G * shade, fogG) + l * litCg + w,
+            int color = argb(runs[p + 11] * capFade, Mth.lerp(hz, WALL_R * shade, fogR) + l * litCr + w, Mth.lerp(hz, WALL_G * shade, fogG) + l * litCg + w,
                     Mth.lerp(hz, WALL_B * shade, fogB) + l * litCb + w);
             float ua = u0 + runs[p + 8], ub = u0 + runs[p + 9];
             vertex(vc, ax, y0, az, ua, r0 / 100, color);
@@ -567,20 +727,17 @@ public final class StormRenderer {
             int color = foot ? type.base : core ? bt.core : bt.glow;
             float cx = foot ? 0 : (offX[k - 1] + offX[k]) / 2, cz = foot ? 0 : (offZ[k - 1] + offZ[k]) / 2;
             float ry = foot ? r * .05f : -SINK + k * (h + SINK) / TIERS, tl = foot ? 0 : tilt[k];
-            if (!onScreen(cx, cz, profile(Math.max(ry + tl, 0)) * 1.04f + 1 + sway, ry - tl - halfW, ry + tl + halfW)) continue; // after the random draws: same rings either way
-            float ox = 0, oz = 0;
-            if (!born) { // being born: the rings ride on the funnel, small and dim near its tip
-                float f = form(ry);
-                if (f <= 0) continue;
-                bright *= Math.min(1, f * 1.4f);
-                ox = swayX(ry);
-                oz = swayZ(ry);
+            if (!onScreen(cx, cz, profile(Math.max(ry + tl, 0)) * 1.04f + 1, ry - tl - halfW, ry + tl + halfW)) continue; // after the random draws: same rings either way
+            if (!born || dying > 0) { // being born: wide, faint halos riding the vortex in; dying: letting go
+                float v = vis(ry);
+                if (v <= 0) continue;
+                bright *= v * (1 + 2 * (1 - v)); // a last flare as each comes free
             }
             for (int i = 0; i <= RING_SEG; i++) {
                 float ang = i * TAU / RING_SEG, c = Mth.cos(ang), s = Mth.sin(ang);
                 float y = foot ? r * .05f : seam(k, ang), rad = profile(Math.max(y, 0)) * 1.035f;
-                float x = cx + ox + rad * c, z = cz + oz + rad * s, u = u0 + i * reps / (float) RING_SEG;
-                float a = (core ? bright : bright * .65f) * pulse * front(x - ox, z - oz, rad / 1.035f), hz = haze(tx + x, ty + y, tz + z);
+                float x = cx + rad * c, z = cz + rad * s, u = u0 + i * reps / (float) RING_SEG;
+                float a = (core ? bright : bright * .65f) * pulse * front(x, z, rad / 1.035f), hz = haze(tx + x, ty + y, tz + z);
                 rowA.glow(i, x, y - halfW, z, u, 0, color, a, hz);
                 rowB.glow(i, x, y + halfW, z, u, 1, color, a, hz);
             }
@@ -593,7 +750,7 @@ public final class StormRenderer {
      * so the circles read as circles but have gaps and look scattered. Inner circles turn faster.
      */
     private void arcs(VertexConsumer vc, boolean core) {
-        if (arcsIn <= 0) return; // being born: not yet
+        if (arcsIn * outside <= 0) return; // being born: not yet; from inside the column the wall hides them
         pull = r * .06f;
         RandomSource rnd = RandomSource.create(~seed);
         for (int k = 0; k < ARC_RINGS; k++) {
@@ -606,7 +763,7 @@ public final class StormRenderer {
             int count = 2 + rnd.nextInt(3);
             for (int m = 0; m < count; m++) {
                 float a0 = rnd.nextFloat() * TAU + turn, len = (.08f + rnd.nextFloat() * .3f) * TAU;
-                float bright = (.6f + rnd.nextFloat() * .4f) * fade * (core ? 1 : .6f) * pulse * arcsIn;
+                float bright = (.6f + rnd.nextFloat() * .4f) * fade * (core ? 1 : .6f) * pulse * arcsIn * outside;
                 if (!onScreen(0, 0, rad + halfW, y - 1, y + 1)) continue; // after its random draws: the rest stay the same
                 int n = Math.max(4, (int) (len / TAU * ARC_SEG));
                 for (int i = 0; i <= n; i++) {
@@ -672,11 +829,11 @@ public final class StormRenderer {
      * partly transparent, and those pixels write no depth.
      */
     private float front(float x, float z, float wallR) {
-        if (camInside) return 1;
+        if (outside <= 0) return 1;
         float cx = -tx, cz = -tz, dx = x - cx, dz = z - cz;
         float s = Mth.clamp(-(cx * dx + cz * dz) / (dx * dx + dz * dz), 0, 1); // where the line passes nearest the axis
         float px = cx + dx * s, pz = cz + dz * s;
-        return smooth((Mth.sqrt(px * px + pz * pz) - wallR * .95f) / (wallR * .06f));
+        return 1 - outside * (1 - smooth((Mth.sqrt(px * px + pz * pz) - wallR * .95f) / (wallR * .06f)));
     }
 
     /**
@@ -730,8 +887,10 @@ public final class StormRenderer {
             put(i, px, py, pz, pu, pv);
             // Pulled towards the camera along its own sight line: same pixel on screen, but nearer in depth, so the
             // wall (which writes depth and wobbles and flares around the bands) can't swallow it.
+            float d = Mth.sqrt(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]);
+            a *= .12f + .88f * smooth(d / (r * .25f)); // right by the camera a band is mist, not a wall of light
             if (pull > 0 && a > 0) {
-                float d = Mth.sqrt(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]), f = d > pull * 2 ? 1 - pull / d : .5f;
+                float f = d > pull * 2 ? 1 - pull / d : .5f;
                 x[i] *= f;
                 y[i] *= f;
                 z[i] *= f;
@@ -780,9 +939,32 @@ public final class StormRenderer {
                         .setTransparencyState(ADDITIVE_TRANSPARENCY).setCullState(NO_CULL).setWriteMaskState(COLOR_WRITE)
                         .setDepthTestState(NO_DEPTH_TEST).setTexturingState(NO_FOG).createCompositeState(false)));
 
+        /** For packs like Photon (forwardPack()): the plain textured shader, which they draw see-through and blend by alpha. */
+        private static final ShaderStateShard POS_TEX_COLOR = new ShaderStateShard(net.minecraft.client.renderer.GameRenderer::getPositionTexColorShader);
+        static final Function<ResourceLocation, RenderType> WALL_SH = Util.memoize(tex -> create("horizons_unbound_wall_sh",
+                DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS, 1536, false, false,
+                state(tex, POS_TEX_COLOR, TRANSLUCENT_TRANSPARENCY, COLOR_DEPTH_WRITE)));
+        static final Function<ResourceLocation, RenderType> GLOW_SH = Util.memoize(tex -> create("horizons_unbound_glow_sh",
+                DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS, 1536, false, false,
+                state(tex, POS_TEX_COLOR, ADDITIVE_TRANSPARENCY, COLOR_WRITE)));
+        static final Function<ResourceLocation, RenderType> THROUGH_SH = Util.memoize(tex -> create("horizons_unbound_glow_through_sh",
+                DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS, 1536, false, false,
+                CompositeState.builder().setShaderState(POS_TEX_COLOR).setTextureState(new TextureStateShard(tex, false, false))
+                        .setTransparencyState(ADDITIVE_TRANSPARENCY).setCullState(NO_CULL).setWriteMaskState(COLOR_WRITE).setOverlayState(OVERLAY)
+                        .setDepthTestState(NO_DEPTH_TEST).setTexturingState(NO_FOG).createCompositeState(false)));
+
+        static RenderType wall(ResourceLocation tex) { return (forwardPack() ? WALL_SH : WALL).apply(tex); }
+        static RenderType glow(ResourceLocation tex) { return forwardPack() ? GLOW_SH.apply(alphaGlow(tex)) : GLOW.apply(tex); }
+        static RenderType through(ResourceLocation tex) { return forwardPack() ? THROUGH_SH.apply(alphaGlow(tex)) : THROUGH.apply(tex); }
+
+        /** The glow texture whose alpha follows its brightness (tools/make_alpha_glow.py): packs that blend by alpha keep black see-through. */
+        private static final Function<ResourceLocation, ResourceLocation> ALPHA = Util.memoize(t -> t.withPath(t.getPath().replace(".png", "_a.png")));
+
+        private static ResourceLocation alphaGlow(ResourceLocation tex) { return ALPHA.apply(tex); }
+
         private static CompositeState state(ResourceLocation tex, ShaderStateShard shader, TransparencyStateShard blend, WriteMaskStateShard mask) {
             return CompositeState.builder().setShaderState(shader).setTextureState(new TextureStateShard(tex, false, false))
-                    .setTransparencyState(blend).setCullState(NO_CULL).setWriteMaskState(mask).setTexturingState(NO_FOG)
+                    .setTransparencyState(blend).setCullState(NO_CULL).setWriteMaskState(mask).setTexturingState(NO_FOG).setOverlayState(OVERLAY)
                     .createCompositeState(false);
         }
 

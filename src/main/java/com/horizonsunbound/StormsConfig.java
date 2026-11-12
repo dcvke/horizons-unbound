@@ -7,6 +7,9 @@ import java.util.List;
 /** config/horizons_unbound-common.toml: gameplay settings (the server's copy is the one that counts). */
 public final class StormsConfig {
     public static final ModConfigSpec SPEC;
+    public static final ModConfigSpec.BooleanValue RESPECT_CLAIMS;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> NO_STORM_BIOMES;
+    public static final ModConfigSpec.BooleanValue CUTSCENES, ALLOW_END, ALLOW_NETHER, ALLOW_OVERWORLD, ALLOW_DEEP_DARK;
     public static final ModConfigSpec.BooleanValue REQUIRE_VISIT, TRANSFORM_TERRAIN, END_EFFECTS, NETHER_EFFECTS, OVERWORLD_EFFECTS, DEEP_DARK_EFFECTS;
     public static final ModConfigSpec.IntValue SPAWN_INTERVAL, PATCH_EVERY, MAX_STRUCTURES, PROTECT_RADIUS, FRAGMENT_SIZE;
     public static final ModConfigSpec.DoubleValue STRUCTURE_CHANCE, INTENSITY, MERGE_CHANCE, SPAWN_CHANCE;
@@ -17,11 +20,23 @@ public final class StormsConfig {
         b.push("spawning");
         REQUIRE_VISIT = b.comment("Natural Nether/End storms only appear for a player who has already been to that dimension.",
                 "Until then only Overworld storms spawn naturally. /storm spawn ignores this.").define("requireVisit", true);
-        SPAWN_INTERVAL = b.comment("Minutes of play between two chances for a storm to come (game time: it stands still while",
-                "the game is paused or closed). A storm lasts 15 minutes, after a minute of omens.").defineInRange("spawnIntervalMinutes", 60, 1, 1440);
-        SPAWN_CHANCE = b.comment("Chance at each of those moments that a storm actually comes.").defineInRange("spawnChance", .5, 0, 1);
-        MERGE_CHANCE = b.comment("Chance per minute, while one storm is out, that a second storm of another kind rises near it;",
-                "the two head for each other and merge into a mixed storm. 0 = never.").defineInRange("mergeChance", .08, 0, 1);
+        SPAWN_INTERVAL = b.comment("Minutes of play after a storm is gone before the next one may come. The count stands still while a",
+                "storm is out (a storm lasts 15 minutes) and while the game is paused or closed.").defineInRange("minutesBetweenStorms", 45, 1, 1440);
+        SPAWN_CHANCE = b.comment("Chance that a storm comes when that time is up; if not, the count starts over.").defineInRange("stormChance", .8, 0, 1);
+        MERGE_CHANCE = b.comment("Chance that, while a storm is out, a second storm of another kind rises near it a few minutes later;",
+                "the two head for each other and merge into a mixed storm. 0 = never.").defineInRange("secondStormChance", .3, 0, 1);
+        ALLOW_OVERWORLD = b.comment("Which kinds of storm may come on their own (/storm spawn ignores this).").define("allowOverworld", true);
+        ALLOW_NETHER = b.define("allowNether", true);
+        ALLOW_END = b.define("allowEnd", true);
+        ALLOW_DEEP_DARK = b.define("allowDeepDark", true);
+        CUTSCENES = b.comment("Cutscenes on this world or server (a storm's birth, finding a new kind, its death, the finale). Off: storms",
+                "rise right after their omens and nobody's camera is taken. Each player can also turn them off for themselves.").define("cutscenes", true);
+        b.pop().push("protection");
+        RESPECT_CLAIMS = b.comment("Storms leave land claims alone (FTB Chunks, Open Parties and Claims and other claim mods that stop players",
+                "breaking blocks): asked through the same check a player's block breaking goes through.").define("respectClaims", true);
+        NO_STORM_BIOMES = b.comment("Biomes storms never come to on their own: biome ids (minecraft:mushroom_fields) or biome tags (#minecraft:is_ocean).",
+                "Blocks storms never touch: the data pack block tag horizons_unbound:storm_proof. Ground they may reshape: horizons_unbound:reshapable.")
+                .defineListAllowEmpty("noStormBiomes", List.of("minecraft:mushroom_fields"), () -> "", o -> o instanceof String);
         b.pop().push("dimensionPieces");
         TRANSFORM_TERRAIN = b.comment("Storms replace patches of natural ground under their column with blocks of their dimension.")
                 .define("transformTerrain", true);
@@ -59,6 +74,30 @@ public final class StormsConfig {
             case NETHER -> NETHER_STRUCTURES.get();
             case OVERWORLD -> OVERWORLD_STRUCTURES.get();
             case DEEP_DARK -> DEEP_DARK_STRUCTURES.get();
+        };
+    }
+
+    /** May a storm come to this biome on its own (noStormBiomes)? Bad entries are skipped (and logged once). */
+    public static boolean biomeAllowed(net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> biome) {
+        for (String e : NO_STORM_BIOMES.get()) {
+            net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(e.startsWith("#") ? e.substring(1) : e);
+            if (id == null) {
+                if (BAD.add(e)) org.slf4j.LoggerFactory.getLogger("horizons_unbound").warn("Horizons Unbound: '{}' in noStormBiomes is not a biome id or #tag", e);
+                continue;
+            }
+            if (e.startsWith("#") ? biome.is(net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.BIOME, id)) : biome.is(id)) return false;
+        }
+        return true;
+    }
+
+    private static final java.util.Set<String> BAD = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    public static boolean allowed(StormType type) {
+        return switch (type) {
+            case END -> ALLOW_END.get();
+            case NETHER -> ALLOW_NETHER.get();
+            case OVERWORLD -> ALLOW_OVERWORLD.get();
+            case DEEP_DARK -> ALLOW_DEEP_DARK.get();
         };
     }
 

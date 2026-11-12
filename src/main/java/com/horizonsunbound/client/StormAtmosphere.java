@@ -33,7 +33,7 @@ public final class StormAtmosphere {
                 float reach = storm.radius() * StormRenderer.CAP; // umbrella radius
                 float d = (float) Math.sqrt(Mth.square(storm.x - cam.x) + Mth.square(storm.z - cam.z));
                 float w = (1 - smooth((d - reach * .7f) / (reach * .55f))) // full tint anywhere under the umbrella
-                        * StormBirth.presence(storm.age / 20f);               // growing with a newborn storm
+                        * StormBirth.presence(storm.age / 20f) * (1 - storm.dying());               // growing with a newborn storm
                 if (w > best) { best = w; bestType = storm.type; bestStorm = storm; }
             }
             clouds = best > 0;

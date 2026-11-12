@@ -25,6 +25,8 @@ public final class Storm {
     public static final int WAVE_CHARGE = 60;    // ticks the column flares before a wave leaves it
     /** Ticks of a storm's birth (client: StormBirth's timeline); it does nothing to the world until then. */
     public static final int BIRTH = 400;
+    /** Ticks of a storm's death at the end of its life (client: it comes apart, StormRenderer). */
+    public static final int DEATH = 400;
 
     /** Client side: the storms of the client's dimension (ClientStorms keeps it); common code reads it on the client only. */
     public static Collection<Storm> CLIENT = List.of();
@@ -47,8 +49,13 @@ public final class Storm {
     public final List<Mark> marks = new ArrayList<>(); // rebuilt by the server, not saved
     public int structures;        // brought so far
     public StormType mix;         // a merged storm's second kind (its bands alternate colors), else null
+    public transient boolean broken; // server: its effects threw; they stay off (StormManager), the storm stays in the sky
+    public transient float cost;     // server: nanoseconds its effects took a tick, smoothed (/storm debug)
+    public boolean grand;         // the great storm: all four kinds at once (StormCutscenes: the finale)
     public int omen;              // ticks until it rises; while > 0 only its omens show (dark sky, wind, nervous animals)
     UUID target;                  // server: the storm it is heading for, to merge with
+    int cue = -1;                 // server: ticks until it rises with its cutscene (StormCutscenes), -1 = not yet seen
+    int held;                     // server: ticks it has waited, omens up, for someone to come and see it
     private float heading;        // server only from here on
     private int life = LIFE;
     private double ground;
@@ -71,6 +78,8 @@ public final class Storm {
         s.age = age;
         s.mix = mix;
         s.omen = omen;
+        s.life = life;
+        s.grand = grand;
         s.marks.addAll(marks);
         return s;
     }
@@ -91,7 +100,7 @@ public final class Storm {
     public double dist(double px, double pz) { return Math.sqrt((px - x) * (px - x) + (pz - z) * (pz - z)); }
 
     /** Ticks between waves (Nether heat, End gravity); 0 = no waves. */
-    public int wavePeriod() { return type == StormType.NETHER ? 400 : type == StormType.END ? 1500 : 0; }
+    public int wavePeriod() { return has(StormType.NETHER) ? 400 : has(StormType.END) ? 1500 : 0; } // a merged storm by either kind: its effects run for both
 
     /** 0..1 how far its omens have grown (1 = about to rise). */
     public float omenProgress() { return 1 - omen / (float) StormManager.OMEN_TICKS; }
@@ -112,7 +121,7 @@ public final class Storm {
     public float waveFront(float age) {
         int p = wavePeriod();
         if (p == 0 || age < BIRTH) return -1;
-        float ph = age % p - WAVE_CHARGE, f = ph * (type == StormType.NETHER ? 1.5f : 1f);
+        float ph = age % p - WAVE_CHARGE, f = ph * (has(StormType.NETHER) ? 1.5f : 1f);
         return ph < 0 || f > zone() ? -1 : f;
     }
 
@@ -127,13 +136,22 @@ public final class Storm {
 
     public long seed() { return id.getLeastSignificantBits(); }
     void setHeading(float radians) { heading = radians; }
-    int life() { return life; }
-    void life(int ticks) { life = ticks; }
+    public int life() { return life; }
+    public void life(int ticks) { life = ticks; }
+
+    /** 0..1 how far through its death it is (0 for most of its life). */
+    public float dying() { return life >= DEATH ? 0 : Mth.clamp(1 - life / (float) DEATH, 0, 1); }
+
+    /** Client tick: it moves and ages, and its life runs down (the server's copy does that in tick()). */
+    public void clientStep() {
+        step();
+        if (life > 0) life--;
+    }
     /** True if this storm is (or, merged, partly is) of the given kind. */
-    public boolean has(StormType t) { return type == t || mix == t; }
+    public boolean has(StormType t) { return grand || type == t || mix == t; }
 
     /** The color of band k: a merged storm alternates its two kinds' colors. */
-    public StormType bandType(int k) { return mix != null && (k & 1) == 1 ? mix : type; }
+    public StormType bandType(int k) { return grand ? StormType.values()[k % 4] : mix != null && (k & 1) == 1 ? mix : type; }
 
     /** One tick of movement along the current velocity; runs on both sides. */
     public void step() {
@@ -193,6 +211,7 @@ public final class Storm {
         tag.putInt("Structures", structures);
         if (mix != null) tag.putString("Mix", mix.id);
         tag.putInt("Omen", omen);
+        tag.putBoolean("Grand", grand);
         if (target != null) tag.putUUID("Target", target);
         return tag;
     }
@@ -206,6 +225,7 @@ public final class Storm {
         s.structures = tag.getInt("Structures");
         if (tag.contains("Mix")) s.mix = StormType.byId(tag.getString("Mix"));
         s.omen = tag.getInt("Omen");
+        s.grand = tag.getBoolean("Grand");
         if (tag.hasUUID("Target")) s.target = tag.getUUID("Target");
         return s;
     }
@@ -224,6 +244,8 @@ public final class Storm {
         buf.writeVarInt(s.age);
         buf.writeByte(s.mix == null ? -1 : s.mix.ordinal());
         buf.writeVarInt(s.omen);
+        buf.writeVarInt(s.life);
+        buf.writeBoolean(s.grand);
         buf.writeVarInt(s.marks.size());
         for (Mark m : s.marks) {
             buf.writeByte(m.kind());
@@ -244,6 +266,8 @@ public final class Storm {
         int mix = buf.readByte();
         s.mix = mix < 0 ? null : types[Mth.clamp(mix, 0, types.length - 1)];
         s.omen = buf.readVarInt();
+        s.life = buf.readVarInt();
+        s.grand = buf.readBoolean();
         for (int i = Math.min(buf.readVarInt(), 256); i > 0; i--)
             s.marks.add(new Mark(buf.readByte(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readVarInt()));
         return s;

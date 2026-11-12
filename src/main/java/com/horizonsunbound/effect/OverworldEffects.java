@@ -84,10 +84,10 @@ public final class OverworldEffects {
         BlockState gs = level.getBlockState(g), us = level.getBlockState(up);
         switch (band) {
             case 0 -> { // frost: thin ice on still water, a snow layer on the ground
-                if (gs.is(Blocks.WATER) && level.getFluidState(g).isSource() && us.isAir()) {
+                if (gs.is(Blocks.WATER) && level.getFluidState(g).isSource() && us.isAir() && StormEffects.free(level, g)) {
                     level.setBlock(g, Blocks.FROSTED_ICE.defaultBlockState(), Block.UPDATE_ALL);
                     level.scheduleTick(g, Blocks.FROSTED_ICE, Mth.nextInt(rnd, 60, 120)); // melts again by itself
-                } else if (us.isAir() && Blocks.SNOW.defaultBlockState().canSurvive(level, up)) {
+                } else if (us.isAir() && Blocks.SNOW.defaultBlockState().canSurvive(level, up) && StormEffects.free(level, up)) {
                     level.setBlock(up, Blocks.SNOW.defaultBlockState(), Block.UPDATE_ALL);
                 } else return;
                 level.sendParticles(ParticleTypes.SNOWFLAKE, x + .5, up.getY() + .5, z + .5, 6, .4, .3, .4, .01);

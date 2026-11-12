@@ -26,6 +26,12 @@ public final class ClientStorms {
     /** Storms that have risen. */
     public static Collection<Storm> all() { return STORMS.values(); }
 
+    /** A storm, risen or about to rise (then omen > 0), or null. */
+    public static Storm get(UUID id) {
+        Storm s = STORMS.get(id);
+        return s != null ? s : OMENS.get(id);
+    }
+
     /** Storms about to rise (omen > 0). */
     public static Collection<Storm> omens() { return OMENS.values(); }
 
@@ -53,6 +59,8 @@ public final class ClientStorms {
             s.vy = u.vy;
             s.vz = u.vz;
             s.age = u.age;
+            s.life(u.life());
+            s.grand = u.grand;
             s.marks.clear();
             s.marks.addAll(u.marks);
             next.put(u.id, s);
@@ -65,7 +73,7 @@ public final class ClientStorms {
     public static void onTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.isPaused()) return;
-        for (Storm s : STORMS.values()) s.step();
+        for (Storm s : STORMS.values()) s.clientStep();
         for (Storm o : OMENS.values()) if (o.omen > 1) o.omen--;
     }
 

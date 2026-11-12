@@ -1,0 +1,30 @@
+# Overworld storm birth seen from afar, a shot at each beat of StormBirth (names: seconds since it rose).
+/storm clear
+/time set 6000
+/tp @s 0 140 0 0 8
+wait 200
+/storm spawn overworld
+wait 19
+shot birth_01.0
+wait 39
+shot birth_03.0
+wait 39
+shot birth_05.0
+wait 29
+shot birth_06.5
+wait 29
+shot birth_08.0
+wait 29
+shot birth_09.5
+wait 19
+shot birth_10.5
+wait 11
+shot birth_11.1
+wait 7
+shot birth_11.5
+wait 19
+shot birth_12.5
+wait 49
+shot birth_15.0
+wait 99
+shot birth_20.0

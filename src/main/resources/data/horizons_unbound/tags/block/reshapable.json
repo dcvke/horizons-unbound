@@ -1,0 +1,20 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:base_stone_overworld",
+    "#minecraft:dirt",
+    "#minecraft:sand",
+    "minecraft:gravel",
+    "#minecraft:snow",
+    "minecraft:clay",
+    "#minecraft:terracotta",
+    "#minecraft:base_stone_nether",
+    "#minecraft:nylium",
+    "minecraft:soul_sand",
+    "minecraft:soul_soil",
+    "minecraft:end_stone",
+    "minecraft:magma_block",
+    "minecraft:blackstone",
+    "minecraft:basalt"
+  ]
+}

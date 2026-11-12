@@ -325,7 +325,7 @@ public final class InsideStorm {
         @Override
         public void tick() {
             float w = weight(kind);
-            volume = Math.max(.001f, w * (kind == StormType.OVERWORLD ? .35f : .6f));
+            volume = Math.max(.001f, w * (kind == StormType.OVERWORLD ? .35f : .6f) * StormConfig.VOLUME.get().floatValue());
             if (w < .01f) stop();
         }
     }
@@ -334,7 +334,7 @@ public final class InsideStorm {
 
     @SubscribeEvent
     public static void onRender(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_WEATHER || weight < .02f || type == null) return;
+        if (event.getStage() != StormRenderer.stage() || weight < .02f || type == null) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         Vec3 cam = event.getCamera().getPosition();

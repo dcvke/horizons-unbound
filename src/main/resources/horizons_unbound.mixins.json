@@ -4,6 +4,6 @@
   "package": "com.horizonsunbound.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": ["LevelMixin"],
-  "client": ["ClientLevelMixin", "LevelRendererMixin"],
+  "client": ["CameraMixin", "ClientLevelMixin", "ItemInHandRendererMixin", "LevelRendererMixin", "PlayerModelMixin", "ToastComponentMixin"],
   "injectors": { "defaultRequire": 1 }
 }

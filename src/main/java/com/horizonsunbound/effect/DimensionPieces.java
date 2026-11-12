@@ -77,7 +77,7 @@ final class DimensionPieces {
                     level.setBlock(p, block(type, theme, k, rnd), Block.UPDATE_CLIENTS);
                 }
                 BlockState deco = deco(type, theme, rnd);
-                if (deco != null && level.getBlockState(above).isAir() && deco.canSurvive(level, above)) level.setBlock(above, deco, Block.UPDATE_CLIENTS);
+                if (deco != null && level.getBlockState(above).isAir() && deco.canSurvive(level, above) && StormEffects.free(level, above)) level.setBlock(above, deco, Block.UPDATE_CLIENTS);
             }
         }
         // End ground sometimes carries a reality anchor along
@@ -179,6 +179,9 @@ final class DimensionPieces {
         BoundingBox keepOut = area.inflatedBy(8);
         for (ServerPlayer p : level.players()) if (keepOut.isInside(p.blockPosition())) return; // never bury anyone
         if (PlacedBlocks.anyIn(level, area.inflatedBy(2))) return; // never over anything a player built
+        for (int x : new int[] {area.minX(), area.maxX()}) // nor into a claim (checked at the corners and the middle: claims come in whole chunks)
+            for (int z : new int[] {area.minZ(), area.maxZ()}) if (!StormEffects.unclaimed(level, new BlockPos(x, area.minY(), z))) return;
+        if (!StormEffects.unclaimed(level, area.getCenter())) return;
         for (BoundingBox cut : cuts) {
             ChunkPos.rangeClosed(new ChunkPos(cut.minX() >> 4, cut.minZ() >> 4), new ChunkPos(cut.maxX() >> 4, cut.maxZ() >> 4)).forEach(cp -> {
                 BoundingBox column = new BoundingBox(cp.getMinBlockX(), level.getMinBuildHeight(), cp.getMinBlockZ(), cp.getMaxBlockX(), level.getMaxBuildHeight(), cp.getMaxBlockZ());

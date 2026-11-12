@@ -36,6 +36,8 @@ base {
 
 // Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+// Addon authors get the sources next to the jar (published with it by maven-publish).
+java { withSourcesJar() }
 
 neoForge {
     // Specify the version of NeoForge to use.
@@ -58,6 +60,15 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
+        // Scripted visual test: ./gradlew runClientTest -Pscenario=<name of tools/scenarios/*.txt> (see client/ClientTest)
+        clientTest {
+            client()
+            gameDirectory = project.file('run-test')
+            systemProperty 'hu.test.script', file("tools/scenarios/${project.findProperty('scenario') ?: 'birth'}.txt").absolutePath
+            systemProperty 'hu.test.hidden', "${project.findProperty('hidden') ?: 'false'}" // shown, but never on top: other windows go over it
+            programArguments.addAll '--width', '1280', '--height', '720'
+        }
+
         server {
             server()
             programArgument '--nogui'
@@ -69,6 +80,7 @@ neoForge {
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
             type = "gameTestServer"
+            gameDirectory = project.file('run-gametest') // its own folder: no client-only mods from run/mods on a dedicated server
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
