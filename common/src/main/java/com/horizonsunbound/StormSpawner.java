@@ -138,6 +138,8 @@ public final class StormSpawner {
     /** The flag outlives death (persistent data isn't copied to the new player by itself). */
 
     public static void onClone(net.minecraft.world.entity.player.Player original, net.minecraft.world.entity.player.Player player) {
+        if (original instanceof ServerPlayer before && player instanceof ServerPlayer after)
+            com.horizonsunbound.platform.ViewDistances.set(after, com.horizonsunbound.platform.ViewDistances.get(before));
         if (com.horizonsunbound.platform.Services.STORAGE.data(original).getBoolean(DEEP_DARK_SEEN)) com.horizonsunbound.platform.Services.STORAGE.data(player).putBoolean(DEEP_DARK_SEEN, true);
     }
 

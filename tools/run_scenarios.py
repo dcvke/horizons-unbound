@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import time
 import shutil
+from compat_mods import unpack_fabric_dependencies
 
 SCENARIOS = ['birth', 'cutscene', 'discovery', 'death', 'grand', 'wall', 'phrases', 'acting', 'gather', 'cutscene_obstacles', 'baseline']
 
@@ -21,7 +22,9 @@ def main():
     parser.add_argument('--kubejs', action='store_true')
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--language', choices=['en_us', 'ru_ru'])
+    parser.add_argument('--production', action='store_true', help='Run the remapped Fabric jar with the normal production loader')
     args = parser.parse_args()
+    if args.production and args.loader != 'fabric': parser.error('--production is a Fabric check')
     root = Path(__file__).resolve().parent.parent
     destination = args.output.resolve()
     destination.mkdir(parents=True, exist_ok=args.resume)
@@ -42,24 +45,31 @@ def main():
             continue
         results = [result for result in results if result['scenario'] != scenario]
         game = destination / scenario
-        if game.exists(): game.rename(destination / (scenario + '-previous-' + str(time.time_ns())))
+        if game.exists():
+            archived = destination / (scenario + '-previous-' + str(time.time_ns()))
+            game.rename(archived)
+            previous_log = destination / (scenario + '.log')
+            if previous_log.exists(): shutil.copy2(previous_log, archived / 'gradle-previous.log')
         game.mkdir()
         (game / 'options.txt').write_text(options, encoding='utf-8')
         if args.mods:
-            mod_directory = game / ('mods' if args.loader == 'neoforge' else 'compat-input')
+            mod_directory = game / ('mods' if args.loader == 'neoforge' or args.production else 'compat-input')
             mod_directory.mkdir()
             for mod in args.mods.glob('*.jar'): shutil.copy2(mod, mod_directory / mod.name)
+            if args.loader == 'fabric' and not args.production: unpack_fabric_dependencies(root, mod_directory)
         if args.shaderpack:
             (game / 'shaderpacks').mkdir()
             shutil.copy2(args.shaderpack, game / 'shaderpacks' / args.shaderpack.name)
             (game / 'config').mkdir(exist_ok=True)
-            (game / 'config/iris.properties').write_text('enableShaders=true\nshaderPack=' + args.shaderpack.name + '\ndisableUpdateMessage=true\n')
+            shader_config = 'oculus.properties' if args.loader == 'forge' else 'iris.properties'
+            (game / 'config' / shader_config).write_text('enableShaders=true\nshaderPack=' + args.shaderpack.name + '\ndisableUpdateMessage=true\n')
         if args.kubejs:
             scripts = game / 'kubejs/startup_scripts'
             scripts.mkdir(parents=True)
             (scripts / 'horizons_unbound_compat.js').write_text("ForgeEvents.onEvent('com.horizonsunbound.api.StormEvent$Born', event => { console.info('[HU_COMPAT] Born event received: ' + event.getStorm().type.id) })\n")
-        command = [str(wrapper), ':' + args.loader + ':runClientTest', '--console=plain', '--no-configuration-cache', '-Pscenario=' + scenario, '-PtestDirectory=' + str(game), *args.gradle_arg]
-        if args.mods and args.loader != 'neoforge': command.append('-PcompatModsDirectory=' + str(mod_directory))
+        task = 'runProductionClientTest' if args.production else 'runClientTest'
+        command = [str(wrapper), ':' + args.loader + ':' + task, '--console=plain', '--no-configuration-cache', '-Pscenario=' + scenario, '-PtestDirectory=' + str(game), *args.gradle_arg]
+        if args.mods and args.loader != 'neoforge' and not args.production: command.append('-PcompatModsDirectory=' + str(mod_directory))
         print('START ' + scenario, flush=True)
         started = time.monotonic()
         with (destination / (scenario + '.log')).open('w', encoding='utf-8') as log:
@@ -82,7 +92,7 @@ def main():
             errors.append('The requested shader pack is not active')
         if args.shaderpack and 'Using shaderpack: ' + args.shaderpack.name not in log_text:
             errors.append('Iris/Oculus did not select the requested shader pack')
-        result = dict(scenario=scenario, exit=code, done='DONE in ' in report,
+        result = dict(scenario=scenario, runtime='production' if args.production else 'development', exit=code, done='DONE in ' in report,
                       failures=[line for line in report.splitlines() if 'FAIL' in line], errors=errors,
                       screenshots=len(list((game / 'screenshots').glob('*.png'))), seconds=round(time.monotonic() - started, 1))
         results.append(result)

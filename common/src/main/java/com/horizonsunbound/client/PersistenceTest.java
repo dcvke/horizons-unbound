@@ -5,8 +5,14 @@ import com.horizonsunbound.api.HorizonsUnboundApi;
 import com.horizonsunbound.effect.PlacedBlocks;
 import com.horizonsunbound.platform.Services;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
@@ -15,13 +21,12 @@ import java.util.function.Consumer;
 
 /** Scripted save/reopen checks, active only when ClientTest dispatches a persist step. */
 public final class PersistenceTest {
+    private static int expectedViewDistance = -1;
     private PersistenceTest() {}
     public static void run(String operation, ServerPlayer player, Path directory, Consumer<String> log) {
         try {
             if (operation.equals("seed")) {
-                BlockPos pos = player.blockPosition().below(2);
-                player.serverLevel().setBlockAndUpdate(pos, Blocks.STONE.defaultBlockState());
-                PlacedBlocks.mark(player.serverLevel(), pos, true);
+                BlockPos pos = placeStone(player);
                 var data = Services.STORAGE.data(player);
                 data.putString("horizons_unbound_met", "end");
                 data.putString("horizons_unbound_finale", "pending");
@@ -43,7 +48,12 @@ public final class PersistenceTest {
                 UUID id = UUID.fromString(checkpoint.getProperty("storm"));
                 require(HorizonsUnboundApi.storms(player.serverLevel()).stream().anyMatch(storm -> storm.id.equals(id) && storm.type == StormType.END), "saved storm was lost");
                 memory(player);
-            } else if (operation.equals("memory")) memory(player);
+                expectedViewDistance = 7;
+                com.horizonsunbound.platform.ViewDistances.set(player, expectedViewDistance);
+            } else if (operation.equals("memory")) {
+                memory(player);
+                log.accept("PASS client view distance after respawn: " + com.horizonsunbound.platform.ViewDistances.get(player));
+            }
             else if (operation.equals("old")) {
                 Properties expected = new Properties();
                 try (var reader = Files.newBufferedReader(directory.resolve("old-world.properties"))) { expected.load(reader); }
@@ -60,10 +70,33 @@ public final class PersistenceTest {
         } catch (Exception | LinkageError error) { log.accept("FAIL persistence " + operation + ": " + error); }
     }
     private static void memory(ServerPlayer player) {
+        if (expectedViewDistance >= 0)
+            require(com.horizonsunbound.platform.ViewDistances.get(player) == expectedViewDistance, "client view distance was lost after respawn");
         var data = Services.STORAGE.data(player);
         require(data.getString("horizons_unbound_met").equals("end"), "encounter memory was lost");
         require(data.getString("horizons_unbound_finale").equals("pending"), "finale memory was lost");
         require(data.getBoolean("horizons_unbound_deep_dark"), "Deep Dark memory was lost");
+    }
+    private static BlockPos placeStone(ServerPlayer player) {
+        BlockPos base = player.blockPosition().offset(3, -2, 0), pos = base.above();
+        var level = player.serverLevel();
+        level.setBlockAndUpdate(base, Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+        var mode = player.gameMode.getGameModeForPlayer();
+        var hand = player.getMainHandItem();
+        try {
+            player.setGameMode(GameType.CREATIVE);
+            var stack = new ItemStack(Blocks.STONE);
+            player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+            var hit = new BlockHitResult(Vec3.atCenterOf(base).add(0, .5, 0), Direction.UP, base, false);
+            var result = player.gameMode.useItemOn(player, level, stack, InteractionHand.MAIN_HAND, hit);
+            require(result.consumesAction() && level.getBlockState(pos).is(Blocks.STONE), "vanilla item placement failed");
+            require(PlacedBlocks.placed(level, pos), "player-placement hook did not protect the block");
+            return pos;
+        } finally {
+            player.setItemInHand(InteractionHand.MAIN_HAND, hand);
+            player.setGameMode(mode);
+        }
     }
     private static void require(boolean condition, String message) { if (!condition) throw new IllegalStateException(message); }
 }

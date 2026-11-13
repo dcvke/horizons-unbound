@@ -9,7 +9,7 @@ Use the jar for your Minecraft version and loader. Install Horizons Unbound on b
 | Minecraft | Loader | Java | Required additional mods | Settings screen |
 |---|---|---|---|---|
 | 1.21.1 | NeoForge 21.1.265+ | 21 | None | Mods → Horizons Unbound → Config |
-| 1.21.1 | Fabric Loader 0.20.1+ | 21 | Fabric API, Forge Config API Port 21.1.6+ | Mod Menu, optional |
+| 1.21.1 | Fabric Loader 0.20.1+ | 21 | Fabric API 0.116.18+, Forge Config API Port 21.1.6+ | Mod Menu, optional |
 | 1.20.1 | Forge 47.4.29+ | 17 | None | Mods → Horizons Unbound → Config |
 | 1.20.1 | Fabric Loader 0.20.1+ | 17 | Fabric API 0.92.0+, Forge Config API Port 8.0.3+ | Mod Menu, optional |
 
@@ -39,6 +39,8 @@ Run `./gradlew :neoforge:runClient` or `:fabric:runClient` on `1.21.1`; use `:fo
 ```
 
 Replace `neoforge` with `forge` on `1.20.1`. Scripted client tests create a world with seed 1234, run commands, capture frames, log sounds with master volume muted, and exit automatically. Scenarios are in `tools/scenarios/`; `tools/run_scenarios.py` runs the full sequence in separate directories, and `tools/contact_sheet.py` makes visual comparisons. Existing test worlds and captures are archived before a fresh test. See [testing tools](docs/TESTING.md).
+
+The [verification snapshot](docs/VERIFICATION.md) records the tested versions, compatibility results and remaining limits for all four builds.
 
 ## Addons, modpacks and servers
 
