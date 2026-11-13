@@ -158,5 +158,6 @@ Restart the game/server after changing startup scripts. The binding and class-st
   a dark hole, black squares around the glow), change "Shader pack mode" in the client settings. Photon is
   detected and gets the FORWARD mode by itself.
 - **Distant Horizons**: storms are seen from at least 64 chunks away when "Storm view distance" is 0.
+- **Fabric 1.20.1 shader versions**: the tested stable pair is Iris 1.7.5 with Sodium 0.5.11. Iris 1.7.6's [required Sodium version](https://api.modrinth.com/v2/version/s5eFLITc) is the 0.5.12 beta; mixing it with stable Sodium 0.5.11 fails before a world loads.
 - **Cloud mods**: under a storm's sky the vanilla cloud invocation is skipped and the storm draws its own cloud cap. A cloud mod which uses a separate render path may need its own integration. Weather replacements may suppress vanilla thunder and rain.
 - **Dedicated servers**: each loader has ordinary server smoke tests as well as GameTests; no rendering classes are required on a server.

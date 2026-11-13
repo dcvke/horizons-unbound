@@ -19,8 +19,11 @@ dependencies {
     modCompileOnly "com.terraformersmc:modmenu:${modmenu_version}"
     modLocalRuntime "com.terraformersmc:modmenu:${modmenu_version}"
     modCompileOnly 'eu.pb4:common-protection-api:1.0.0'
+    productionRuntimeMods("net.fabricmc.fabric-api:fabric-api:${fabric_version}") { transitive = false }
+    productionRuntimeMods("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_api_port_version}") { transitive = false }
+    productionRuntimeMods("com.terraformersmc:modmenu:${modmenu_version}") { transitive = false }
     if (project.hasProperty('compatModsDirectory')) {
-        modLocalRuntime fileTree(project.file(project.property('compatModsDirectory'))) { include '*.jar' }
+        modLocalRuntime fileTree(project.file(project.property('compatModsDirectory'))) { include '**/*.jar' }
     }
 }
 
@@ -55,7 +58,20 @@ loom {
 processResources {
     var properties = [mod_id: mod_id, mod_version: mod_version, mod_name: mod_name,
                       mod_license: mod_license, minecraft_version: minecraft_version,
-                      fabric_loader_version: fabric_loader_version, forge_config_api_port_version: forge_config_api_port_version]
+                      fabric_loader_version: fabric_loader_version, fabric_api_min_version: fabric_api_min_version,
+                      forge_config_api_port_version: forge_config_api_port_version]
     inputs.properties properties
     filesMatching('fabric.mod.json') { expand properties }
+}
+
+tasks.register('runProductionClientTest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+    runDir.set(file(project.findProperty('testDirectory') ?: 'run-production-test'))
+    useXVFB = false
+    jvmArgs.addAll('-Xmx2G',
+            "-Dhu.test.script=${rootProject.file("tools/scenarios/${project.findProperty('scenario') ?: 'birth'}.txt").absolutePath}",
+            "-Dhu.test.hidden=${project.findProperty('hidden') ?: 'false'}",
+            "-Dhu.test.reuseWorld=${project.findProperty('reuseWorld') ?: 'false'}")
+    programArgs.addAll('--username', 'Dev', '--version', minecraft_version, '--accessToken', 'FabricMC',
+            '--uuid', UUID.nameUUIDFromBytes('OfflinePlayer:Dev'.getBytes('UTF-8')).toString(),
+            '--width', '1280', '--height', '720')
 }

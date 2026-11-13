@@ -16,6 +16,10 @@ This runs all eleven scenarios: birth, cutscene, discovery, death, grand, wall, 
 
 Use `--scenarios birth baseline` for a subset, `--mods <directory>` for local Modrinth jars and `--shaderpack <zip>` for a local shader pack. Both inputs are copied into the isolated run. `--kubejs` installs a Forge 1.20.1 startup listener and requires a Born event in the log. Neither mods nor packs belong in Git.
 
+Build the Fabric module once before testing local compatibility jars. The helper reads the installed Fabric API dependency metadata and exposes bundled libraries from the supplied jars to Loom in the isolated test classpath. This keeps Iris's parser libraries and similar nested dependencies available without adding them to Horizons Unbound.
+
+Add `--production` on Fabric to run the built, remapped mod jar with the normal Fabric loader and original compatibility jars. The `:fabric:runProductionClientTest` task provides this mode directly. It tests the distributed binary and avoids development-only refmap remapping problems in third-party mods. It uses the same scripted world, muted window and capture/report workflow.
+
 The `config` scenario opens the loader-registered settings factory, captures the screen and checks a saved client-volume edit, then restores it. On the custom 1.20.1 screen it also exercises value parsing and the screen's save path.
 
 ```sh
@@ -26,7 +30,7 @@ Match captures by name and inspect geometry, layers, camera, fog and interface p
 
 ## Saves and servers
 
-`tools/run_persistence.py --loader <loader> --output output/save-check` creates a world, places a tracked block, saves an active storm and encounter memory, reopens it and checks the data. It then kills and respawns the player to check retained memory. `--old-world <world-directory>` imports a copy for the old NeoForge-world check. Source worlds are preserved.
+`tools/run_persistence.py --loader <loader> --output output/save-check` creates a world, places a block through the player's normal item-use path and checks the placement hook, saves an active storm and encounter memory, then reopens it and checks the data. It also kills and respawns the player to check retained memory; on 1.20.1 it checks retained client view distance. `--old-world <world-directory>` imports a copy for the old NeoForge-world check. Source worlds are preserved.
 
 `tools/run_server_smoke.py --loader <loader> --output output/server-check` starts a fresh dedicated server on loopback, waits for readiness, sends storm commands over a temporary RCON connection and stops it. Its isolated test server accepts the EULA; it does not edit other servers.
 
