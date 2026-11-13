@@ -19,11 +19,13 @@ Choose dependencies built for the same Minecraft version. Mod Menu is not requir
 
 The `1.21.1` branch contains `common`, `neoforge` and `fabric`; the `1.20.1` branch contains `common`, `forge` and `fabric`. Shared code compiles against vanilla Minecraft. Loader adapters supply registration, networking, persistence, protection and events through services.
 
-Install JDK 21 for the `1.21.1` branch or JDK 17 for `1.20.1`, then run:
+Install JDK 21 to run Gradle and Loom on either branch, then run:
 
 ```sh
 ./gradlew build
 ```
+
+The `1.20.1` branch compiles and launches Minecraft with a Java 17 toolchain, which Gradle provisions automatically when needed. Its jars require Java 17 for players. The `1.21.1` branch uses Java 21 throughout.
 
 On Windows, use `.\gradlew.bat build`. Binary and source jars are in each loader module's `build/libs/`, named `horizons_unbound-<loader>-<minecraft>-0.2.0.jar` and `-sources.jar`.
 
