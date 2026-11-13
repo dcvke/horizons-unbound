@@ -52,21 +52,3 @@ crash-reports/
 Thumbs.db
 __pycache__/
 *.pyc
-
-### Local assistant instructions and notes ###
-AGENTS.md
-CLAUDE.md
-GEMINI.md
-PORTING_PROMPT.md
-.claude/
-.codex/
-.cursor/
-.junie/
-.continue/
-.specstory/
-.cursorrules
-.windsurfrules
-.aider*
-.mcp.json
-.github/copilot-instructions.md
-graphify-out/
