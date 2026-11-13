@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.horizonsunbound.fabric.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["PlayerMixin", "ServerLevelMixin", "BlockItemMixin"],
+  "client": ["ClientPlayerTickMixin", "CameraMixin", "GameRendererMixin", "LevelRendererMixin", "FogRendererMixin", "GuiMixin", "KeyboardInputMixin", "MouseHandlerMixin", "MinecraftMixin", "SoundEngineMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

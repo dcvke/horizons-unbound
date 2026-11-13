@@ -1,0 +1,9 @@
+wait 60
+persist check
+wait 20
+/gamemode survival
+/kill @s
+wait 80
+persist memory
+wait 20
+note Save/reopen and death checks complete.

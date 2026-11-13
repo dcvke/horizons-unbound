@@ -1,10 +1,12 @@
 # Horizons Unbound for addon makers, modpack makers and server owners
 
-Minecraft 1.21.1, NeoForge. Mod id `horizons_unbound`.
+Minecraft 1.21.1 (NeoForge and Fabric), Minecraft 1.20.1 (Forge and Fabric). Mod id `horizons_unbound`.
 
 ## Settings
 
 Everything is in the in-game screen (Mods → Horizons Unbound → Config) or in the files:
+
+On Fabric, install the matching Forge Config API Port and optionally Mod Menu to open the screen. On 1.21.1 the screen uses the loader's configuration UI; on 1.20.1 the shared screen supports sections, defaults, validated numbers, enums and editable lists. Changes are applied when Done is pressed.
 
 | File | Side | What |
 |---|---|---|
@@ -27,9 +29,9 @@ Add your mod's ground to `reshapable`, and anything precious to `storm_proof`:
 { "replace": false, "values": ["mymod:altar", "#mymod:machines"] }
 ```
 
-Storms also never change blocks players placed, blocks near the world spawn and beds (`protectRadius`),
-and, with `respectClaims` on, blocks in land claims (any claim mod that stops players from breaking blocks
-there through NeoForge's `BlockEvent.BreakEvent`: FTB Chunks, Open Parties and Claims, ...).
+Use `tags/blocks/` instead of `tags/block/` in Minecraft 1.20.1 data packs. That version also uses `loot_tables/` and `structures/` instead of the singular 1.21.1 folder names.
+
+Storms also never change blocks players placed or blocks near the world spawn and beds (`protectRadius`). With `respectClaims` on, a fake player named `[Horizons Unbound storm]` requests break permission. NeoForge and Forge post their native `BlockEvent.BreakEvent`; Fabric invokes `PlayerBlockBreakEvents.BEFORE` and, when installed, Common Protection API. Protection therefore depends on the claim mod handling that loader's hook. Claim mods which bypass those hooks need an integration; installing a claim mod alone is not a guarantee.
 
 ## Resource packs
 
@@ -48,12 +50,24 @@ Kinds: `end`, `nether`, `overworld`, `deep_dark`. Diameter 100 to 200 blocks.
 
 ## Java API
 
-Use only the `com.horizonsunbound.api` package; everything else may change between versions.
-The sources jar is published next to the mod jar.
+The public entry points are in `com.horizonsunbound.api`; callbacks expose the shared `Storm` and `StormType` types. Other implementation details may change between versions. Use the binary and source jars for the same loader and Minecraft version as your addon.
+
+For local development, put the binary jar in your addon's `libs/` and add the appropriate dependency:
+
+```groovy
+// NeoForge with ModDevGradle
+dependencies { implementation files('libs/horizons_unbound-neoforge-1.21.1-0.2.0.jar') }
+// Forge with ModDevGradle legacyforge: remap SRG names for development
+dependencies { modImplementation files('libs/horizons_unbound-forge-1.20.1-0.2.0.jar') }
+// Fabric with Loom: use modImplementation so Loom remaps the production jar
+dependencies { modImplementation files('libs/horizons_unbound-fabric-1.21.1-0.2.0.jar') }
+```
+
+Use `horizons_unbound-forge-1.20.1-0.2.0.jar` or the Fabric 1.20.1 jar on that version. Declare Horizons Unbound as a required dependency in your loader metadata if your addon directly references its classes.
 
 ### Events
 
-Posted on `NeoForge.EVENT_BUS`, on the server:
+Posted on `NeoForge.EVENT_BUS` on NeoForge and `MinecraftForge.EVENT_BUS` on Forge, on the server. Native `StormEvent` classes are loader-specific; Fabric uses the neutral listener below.
 
 | Event | When | Cancel |
 |---|---|---|
@@ -73,6 +87,21 @@ NeoForge.EVENT_BUS.addListener((StormEvent.Born e) ->
 
 `getStorm()` gives the live storm: read `type`, `mix` (a merged storm's second kind, or null), `grand`,
 `x y z`, `diameter`, `radius()`, `zone()` (where its effects reach), `has(kind)`, `dying()`. Don't change it.
+
+The same lifecycle is available on all four builds without an event bus:
+
+```java
+HorizonsUnboundApi.listen(new StormListener() {
+    @Override public boolean announce(ServerLevel level, Storm storm) {
+        return !(storm.has(StormType.NETHER) && isPeaceful(level));
+    }
+    @Override public void born(ServerLevel level, Storm storm) {
+        level.players().forEach(p -> p.sendSystemMessage(Component.literal("A storm rises!")));
+    }
+});
+```
+
+Register once during initialization. `announce` returns false to cancel; `born`, `dying`, `end` and `merge` are notifications. `merge` receives the new storm followed by both original storms. Native and neutral announce decisions are combined: a cancellation by either prevents the announced storm.
 
 ### Your own storm effects
 
@@ -94,7 +123,9 @@ storm's effects stop (the storm stays in the sky), so one broken addon never cra
 
 ## KubeJS
 
-KubeJS can listen to the events directly (server scripts):
+KubeJS is supported through native events on NeoForge and Forge. These examples are not Fabric entry points.
+
+**NeoForge 1.21.1:** put this in `kubejs/server_scripts/horizons_unbound.js`:
 
 ```js
 NativeEvents.onEvent('com.horizonsunbound.api.StormEvent$Born', e => {
@@ -106,14 +137,25 @@ NativeEvents.onEvent('com.horizonsunbound.api.StormEvent$Announce', e => {
 })
 ```
 
+**Forge 1.20.1:** use `ForgeEvents.onEvent` in **`kubejs/startup_scripts/horizons_unbound.js`**. KubeJS 2001 exposes `ForgeEvents` to startup scripts:
+
+```js
+ForgeEvents.onEvent('com.horizonsunbound.api.StormEvent$Born', e => {
+  console.info('A ' + e.getStorm().type.id + ' storm rises')
+})
+
+ForgeEvents.onEvent('com.horizonsunbound.api.StormEvent$Announce', e => {
+  if (e.getLevel().players().size() < 2) e.setCanceled(true)
+})
+```
+
+Restart the game/server after changing startup scripts. The binding and class-string form are defined in KubeJS's [2001 Forge plugin](https://github.com/KubeJS-Mods/KubeJS/blob/2001/forge/src/main/java/dev/latvian/mods/kubejs/forge/BuiltinKubeJSForgePlugin.java) and [Forge event wrapper](https://github.com/KubeJS-Mods/KubeJS/blob/2001/forge/src/main/java/dev/latvian/mods/kubejs/forge/ForgeEventWrapper.java); the newer [native event wrapper](https://github.com/KubeJS-Mods/KubeJS/blob/2101/src/main/java/dev/latvian/mods/kubejs/plugin/builtin/wrapper/NativeEventWrapper.java) implements the NeoForge API.
+
 ## Other mods
 
-- **Iris shader packs**: the storm is drawn after the pack's particles. If it looks wrong with a pack (invisible,
+- **Iris / Oculus shader packs**: the storm is drawn after the pack's particles. If it looks wrong with a pack (invisible,
   a dark hole, black squares around the glow), change "Shader pack mode" in the client settings. Photon is
   detected and gets the FORWARD mode by itself.
 - **Distant Horizons**: storms are seen from at least 64 chunks away when "Storm view distance" is 0.
-- **Cloud mods**: under a storm's sky the vanilla cloud pass is skipped and the storm draws its own cloud cap.
-  Better Clouds and Simple Clouds were tested: their clouds don't cover the storm. Simple Clouds takes over
-  the weather, so with it a storm brings no vanilla thunder and rain (set Simple Clouds to vanilla weather
-  if you want both).
-- **Dedicated servers**: the mod loads without client code on a server (checked by the GameTests).
+- **Cloud mods**: under a storm's sky the vanilla cloud invocation is skipped and the storm draws its own cloud cap. A cloud mod which uses a separate render path may need its own integration. Weather replacements may suppress vanilla thunder and rain.
+- **Dedicated servers**: each loader has ordinary server smoke tests as well as GameTests; no rendering classes are required on a server.

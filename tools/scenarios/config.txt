@@ -1,0 +1,4 @@
+wait 40
+config
+wait 20
+note Registered settings factory and config save checked.

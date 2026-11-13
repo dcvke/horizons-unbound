@@ -1,0 +1,61 @@
+plugins {
+    id 'multiloader-loader'
+    id 'fabric-loom'
+}
+
+repositories {
+    maven { url = 'https://maven.terraformersmc.com/releases' }
+    maven { url = 'https://maven.nucleoid.xyz' }
+}
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_minecraft_version}:${parchment_mappings_version}@zip")
+    }
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_api_port_version}"
+    modCompileOnly "com.terraformersmc:modmenu:${modmenu_version}"
+    modLocalRuntime "com.terraformersmc:modmenu:${modmenu_version}"
+    modCompileOnly 'eu.pb4:common-protection-api:1.0.0'
+    if (project.hasProperty('compatModsDirectory')) {
+        modLocalRuntime fileTree(project.file(project.property('compatModsDirectory'))) { include '*.jar' }
+    }
+}
+
+loom {
+    accessWidenerPath = file('src/main/resources/horizons_unbound.accesswidener')
+    mixin { defaultRefmapName = 'horizons_unbound.refmap.json' }
+    runs {
+        client {
+            client()
+            runDir 'run'
+        }
+        server {
+            server()
+            runDir(project.relativePath(project.file(project.findProperty('serverDirectory') ?: 'run-server')))
+            programArg '--nogui'
+        }
+        gameTestServer {
+            server()
+            runDir 'run-gametest'
+            vmArg '-Dfabric-api.gametest'
+        }
+        clientTest {
+            client()
+            vmArg "-Dhu.test.reuseWorld=${project.findProperty('reuseWorld') ?: 'false'}"
+            runDir(project.relativePath(project.file(project.findProperty('testDirectory') ?: 'run-test')))
+            vmArg "-Dhu.test.script=${rootProject.file("tools/scenarios/${project.findProperty('scenario') ?: 'birth'}.txt").absolutePath}"
+            vmArg "-Dhu.test.hidden=${project.findProperty('hidden') ?: 'false'}"
+            programArgs '--username', 'Dev', '--width', '1280', '--height', '720'
+        }
+    }
+}
+processResources {
+    var properties = [mod_id: mod_id, mod_version: mod_version, mod_name: mod_name,
+                      mod_license: mod_license, minecraft_version: minecraft_version,
+                      fabric_loader_version: fabric_loader_version, forge_config_api_port_version: forge_config_api_port_version]
+    inputs.properties properties
+    filesMatching('fabric.mod.json') { expand properties }
+}

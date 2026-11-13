@@ -1,0 +1,49 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev'
+}
+neoForge {
+    version = neo_version
+    accessTransformers.from(project(':common').file('src/main/resources/META-INF/accesstransformer.cfg'))
+    parchment {
+        minecraftVersion = parchment_minecraft_version
+        mappingsVersion = parchment_mappings_version
+    }
+    runs {
+        client { client() }
+        server {
+            server()
+            gameDirectory = file(project.findProperty('serverDirectory') ?: 'run-server')
+            programArgument '--nogui'
+        }
+        clientTest {
+            client()
+            gameDirectory = file(project.findProperty('testDirectory') ?: 'run-test')
+            systemProperty 'hu.test.reuseWorld', "${project.findProperty('reuseWorld') ?: 'false'}"
+            systemProperty 'hu.test.script', rootProject.file("tools/scenarios/${project.findProperty('scenario') ?: 'birth'}.txt").absolutePath
+            systemProperty 'hu.test.hidden', "${project.findProperty('hidden') ?: 'false'}"
+            programArguments.addAll '--width', '1280', '--height', '720'
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = file('run-gametest')
+        }
+        configureEach {
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            logLevel = org.slf4j.event.Level.INFO
+        }
+    }
+    mods { "${mod_id}" { sourceSet sourceSets.main } }
+}
+var metadata = tasks.register('generateModMetadata', ProcessResources) {
+    var properties = [minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
+                      neo_version: neo_version, neo_version_range: neo_version_range, loader_version_range: loader_version_range,
+                      mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version]
+    inputs.properties properties
+    expand properties
+    from 'src/main/templates'
+    into layout.buildDirectory.dir('generated/sources/modMetadata')
+}
+sourceSets.main.resources.srcDir metadata
+neoForge.ideSyncTask metadata
+configurations { runtimeClasspath.extendsFrom localRuntime }

@@ -1,0 +1,4 @@
+wait 40
+persist old
+wait 20
+shot old_world_loaded

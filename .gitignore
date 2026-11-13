@@ -50,6 +50,8 @@ dist/
 crash-reports/
 *.bak
 Thumbs.db
+__pycache__/
+*.pyc
 
 ### Local assistant instructions and notes ###
 AGENTS.md

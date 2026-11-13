@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+base { archivesName = "${mod_id}-${project.name}-${minecraft_version}" }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    withSourcesJar()
+}
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.neoforged.net/releases' }
+    maven { url = 'https://maven.fabricmc.net' }
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public' }
+    maven { url = 'https://maven.parchmentmc.org' }
+    maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
+}
+configurations.apiElements.outgoing.capability("$group:$mod_id:$version")
+configurations.runtimeElements.outgoing.capability("$group:$mod_id:$version")
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(Jar).configureEach {
+    from(rootProject.file('LICENSE'))
+}

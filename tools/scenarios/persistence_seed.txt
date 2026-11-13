@@ -1,0 +1,4 @@
+wait 60
+persist seed
+wait 40
+note Saved storm, placed-block protection and three memory flags are ready to reopen.
