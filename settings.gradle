@@ -47,6 +47,6 @@ plugins {
 rootProject.name = 'Horizons-Unbound'
 include('common')
 
-include('neoforge')
+if (!providers.gradleProperty('commonOnly').isPresent()) include('forge')
 
-if (!providers.gradleProperty('neoOnly').isPresent()) include('fabric')
+if (!providers.gradleProperty('commonOnly').isPresent() && !providers.gradleProperty('forgeOnly').isPresent()) include('fabric')

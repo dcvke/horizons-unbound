@@ -18,12 +18,12 @@ public class RealityAnchorBlock extends Block {
     public RealityAnchorBlock(Properties props) { super(props); }
 
     @Override
-    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moved) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moved) {
         if (level instanceof ServerLevel sl && !old.is(this)) StormManager.get(sl).anchor(pos, true);
     }
 
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState now, boolean moved) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState now, boolean moved) {
         if (level instanceof ServerLevel sl && !now.is(this)) StormManager.get(sl).anchor(pos, false);
         super.onRemove(state, level, pos, now, moved);
     }

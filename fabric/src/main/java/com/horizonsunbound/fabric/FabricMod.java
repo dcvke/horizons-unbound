@@ -3,7 +3,7 @@ package com.horizonsunbound.fabric;
 import com.horizonsunbound.*;
 import com.horizonsunbound.client.StormConfig;
 import com.horizonsunbound.effect.*;
-import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.NeoForgeConfigRegistry;
+import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.*;
@@ -18,26 +18,27 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.neoforged.fml.config.ModConfig;
+import net.minecraftforge.fml.config.ModConfig;
 
 public final class FabricMod implements ModInitializer {
-    public static ResourceLocation id(String path) { return ResourceLocation.fromNamespaceAndPath(HorizonsUnbound.MODID, path); }
+    public static ResourceLocation id(String path) { return new ResourceLocation(HorizonsUnbound.MODID, path); }
 
     @Override public void onInitialize() {
-        NeoForgeConfigRegistry.INSTANCE.register(HorizonsUnbound.MODID, ModConfig.Type.COMMON, StormsConfig.SPEC);
-        NeoForgeConfigRegistry.INSTANCE.register(HorizonsUnbound.MODID, ModConfig.Type.CLIENT, StormConfig.SPEC);
+        ForgeConfigRegistry.INSTANCE.register(HorizonsUnbound.MODID, ModConfig.Type.COMMON, StormsConfig.SPEC);
+        ForgeConfigRegistry.INSTANCE.register(HorizonsUnbound.MODID, ModConfig.Type.CLIENT, StormConfig.SPEC);
         Registry.register(BuiltInRegistries.BLOCK, id("reality_anchor"), ModContent.REALITY_ANCHOR.get());
         Registry.register(BuiltInRegistries.BLOCK, id("hot_crust"), ModContent.HOT_CRUST.get());
         Registry.register(BuiltInRegistries.ITEM, id("reality_anchor"), ModContent.REALITY_ANCHOR_ITEM.get());
         Registry.register(BuiltInRegistries.ENTITY_TYPE, id("echo"), ModContent.ECHO.get());
         ModSounds.ALL.forEach((name, sound) -> Registry.register(BuiltInRegistries.SOUND_EVENT, id(name), sound.get()));
+        Registry.register(BuiltInRegistries.PARTICLE_TYPE, id("thaw_smoke"), ModContent.THAW_SMOKE.get());
         FabricStorage.initialize();
         FabricDefaultAttributeRegistry.register(ModContent.ECHO.get(), Mob.createMobAttributes());
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(entries -> entries.accept(ModContent.REALITY_ANCHOR_ITEM.get()));
-        PayloadTypeRegistry.playS2C().register(StormSyncPayload.TYPE, StormSyncPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(StormCutscenes.Payload.TYPE, StormCutscenes.Payload.CODEC);
-        PayloadTypeRegistry.playC2S().register(StormCutscenes.Payload.TYPE, StormCutscenes.Payload.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(StormCutscenes.Payload.TYPE, (packet, context) -> StormCutscenes.stopped(context.player()));
+        ServerPlayNetworking.registerGlobalReceiver(StormCutscenes.Payload.ID, (server, player, handler, buffer, response) -> {
+            StormCutscenes.Payload packet = StormCutscenes.Payload.read(buffer);
+            server.execute(() -> StormCutscenes.stopped(player));
+        });
         CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> HorizonsUnbound.registerCommands(dispatcher));
         ServerTickEvents.END_WORLD_TICK.register(StormManager::onLevelTick);
         ServerTickEvents.END_WORLD_TICK.register(StormSpawner::onLevelTick);

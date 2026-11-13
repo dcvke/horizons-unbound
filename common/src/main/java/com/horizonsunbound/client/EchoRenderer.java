@@ -27,7 +27,7 @@ public class EchoRenderer extends LivingEntityRenderer<EchoEntity, PlayerModel<E
         UUID id = echo.owner();
         var connection = Minecraft.getInstance().getConnection();
         PlayerInfo info = id == null || connection == null ? null : connection.getPlayerInfo(id);
-        return info != null ? info.getSkin().texture() : DefaultPlayerSkin.getDefaultTexture();
+        return info != null ? info.getSkinLocation() : DefaultPlayerSkin.getDefaultSkin();
     }
 
     @Override
@@ -50,11 +50,14 @@ public class EchoRenderer extends LivingEntityRenderer<EchoEntity, PlayerModel<E
 
     /** Passes vertices through, tinting them violet and making them about half see-through. */
     private record Ghost(VertexConsumer vc) implements VertexConsumer {
-        @Override public VertexConsumer addVertex(float x, float y, float z) { vc.addVertex(x, y, z); return this; }
-        @Override public VertexConsumer setColor(int r, int g, int b, int a) { vc.setColor(r * 190 / 255, g * 160 / 255, b, a * 120 / 255); return this; }
-        @Override public VertexConsumer setUv(float u, float v) { vc.setUv(u, v); return this; }
-        @Override public VertexConsumer setUv1(int u, int v) { vc.setUv1(u, v); return this; }
-        @Override public VertexConsumer setUv2(int u, int v) { vc.setUv2(u, v); return this; }
-        @Override public VertexConsumer setNormal(float x, float y, float z) { vc.setNormal(x, y, z); return this; }
+        @Override public void endVertex() { vc.endVertex(); }
+        @Override public void defaultColor(int r, int g, int b, int a) { vc.defaultColor(r * 190 / 255, g * 160 / 255, b, a * 120 / 255); }
+        @Override public void unsetDefaultColor() { vc.unsetDefaultColor(); }
+        @Override public VertexConsumer vertex(double x, double y, double z) { vc.vertex(x, y, z); return this; }
+        @Override public VertexConsumer color(int r, int g, int b, int a) { vc.color(r * 190 / 255, g * 160 / 255, b, a * 120 / 255); return this; }
+        @Override public VertexConsumer uv(float u, float v) { vc.uv(u, v); return this; }
+        @Override public VertexConsumer overlayCoords(int u, int v) { vc.overlayCoords(u, v); return this; }
+        @Override public VertexConsumer uv2(int u, int v) { vc.uv2(u, v); return this; }
+        @Override public VertexConsumer normal(float x, float y, float z) { vc.normal(x, y, z); return this; }
     }
 }

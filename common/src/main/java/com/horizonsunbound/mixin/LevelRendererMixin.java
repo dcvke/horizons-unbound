@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
     @WrapWithCondition(method = "renderLevel", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FDDD)V"))
-    private boolean horizonsUnbound$skipCloudsUnderStorm(LevelRenderer self, PoseStack pose, Matrix4f frustum, Matrix4f projection,
+            target = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;FDDD)V"))
+    private boolean horizonsUnbound$skipCloudsUnderStorm(LevelRenderer self, PoseStack pose, Matrix4f projection,
                                                           float partialTick, double camX, double camY, double camZ) {
         return !StormAtmosphere.active();
     }

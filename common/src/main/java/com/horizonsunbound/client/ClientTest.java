@@ -71,14 +71,14 @@ public final class ClientTest {
         mc.options.pauseOnLostFocus = false;
         mc.options.onboardAccessibility = false;
         mc.options.hideGui = true;
-        if (Boolean.getBoolean("hu.test.reuseWorld")) { mc.createWorldOpenFlows().openWorld(WORLD, () -> { log("FAIL opening saved world"); mc.stop(); }); return; }
+        if (Boolean.getBoolean("hu.test.reuseWorld")) { mc.createWorldOpenFlows().loadLevel(screen, WORLD); return; }
         GameRules rules = new GameRules();
         rules.getRule(GameRules.RULE_DAYLIGHT).set(false, null);
         rules.getRule(GameRules.RULE_WEATHER_CYCLE).set(false, null);
         rules.getRule(GameRules.RULE_DOMOBSPAWNING).set(false, null);
         mc.createWorldOpenFlows().createFreshLevel(WORLD,
                 new LevelSettings(WORLD, GameType.SPECTATOR, false, Difficulty.PEACEFUL, true, rules, WorldDataConfiguration.DEFAULT),
-                new WorldOptions(1234L, false, false), WorldPresets::createNormalWorldDimensions, screen);
+                new WorldOptions(1234L, false, false), WorldPresets::createNormalWorldDimensions);
     }
 
     public static void onTick() {
@@ -121,6 +121,11 @@ public final class ClientTest {
             String arg = s.contains(" ") ? s.substring(s.indexOf(' ') + 1).strip() : "";
             if (s.startsWith("/")) mc.player.connection.sendCommand(s.substring(1));
             else if (s.equals("config")) { ConfigTest.open(mc.gameDirectory.toPath(), ClientTest::log); return; }
+            else if (s.equals("claim")) {
+                var server = mc.getSingleplayerServer();
+                var id = mc.player.getUUID();
+                server.execute(() -> ClaimTest.run(server.getPlayerList().getPlayer(id), ClientTest::log));
+            }
             else if (s.startsWith("persist ")) {
                 var server = mc.getSingleplayerServer();
                 var id = mc.player.getUUID();

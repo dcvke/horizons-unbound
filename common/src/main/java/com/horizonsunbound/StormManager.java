@@ -3,7 +3,6 @@ package com.horizonsunbound;
 import com.horizonsunbound.effect.StormEffects;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongArrayTag;
@@ -38,7 +37,7 @@ public final class StormManager extends SavedData {
     int twinIn = -1; // seconds until a second storm comes to meet the first; -1: none
 
     public static StormManager get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(new Factory<>(StormManager::new, StormManager::load, null), "horizons_unbound");
+        return level.getDataStorage().computeIfAbsent(StormManager::load, StormManager::new, "horizons_unbound");
     }
 
     public List<Storm> storms() { return Collections.unmodifiableList(storms); }
@@ -254,7 +253,7 @@ public final class StormManager extends SavedData {
         return new StormSyncPayload(all);
     }
 
-    private static StormManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static StormManager load(CompoundTag tag) {
         StormManager m = new StormManager();
         for (Tag t : tag.getList("Storms", Tag.TAG_COMPOUND)) {
             Storm st = Storm.load((CompoundTag) t);
@@ -271,7 +270,7 @@ public final class StormManager extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag) {
         ListTag list = new ListTag();
         for (Storm s : storms) list.add(s.save());
         for (Storm s : omens) list.add(s.save());

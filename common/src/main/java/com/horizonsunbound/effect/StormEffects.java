@@ -112,9 +112,9 @@ public final class StormEffects {
     }
 
     /** Natural ground storms may reshape (data pack tag; by default stone, dirt, sand, gravel, snow and the like). */
-    public static final TagKey<Block> RESHAPABLE = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(HorizonsUnbound.MODID, "reshapable"));
+    public static final TagKey<Block> RESHAPABLE = TagKey.create(Registries.BLOCK, new ResourceLocation(HorizonsUnbound.MODID, "reshapable"));
     /** Blocks storms never touch, whatever else says (data pack tag). */
-    public static final TagKey<Block> STORM_PROOF = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(HorizonsUnbound.MODID, "storm_proof"));
+    public static final TagKey<Block> STORM_PROOF = TagKey.create(Registries.BLOCK, new ResourceLocation(HorizonsUnbound.MODID, "storm_proof"));
 
     /** May the storm change this block: natural ground (RESHAPABLE) that is free (see free()). */
     static boolean reshape(ServerLevel level, BlockPos pos, BlockState s) { return s.is(RESHAPABLE) && free(level, pos); }

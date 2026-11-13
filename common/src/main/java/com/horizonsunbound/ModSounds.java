@@ -27,7 +27,7 @@ public final class ModSounds {
     private ModSounds() {}
 
     private static Supplier<SoundEvent> sound(String name) {
-        Supplier<SoundEvent> sound = Suppliers.memoize(() -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(HorizonsUnbound.MODID, name)));
+        Supplier<SoundEvent> sound = Suppliers.memoize(() -> SoundEvent.createVariableRangeEvent(new ResourceLocation(HorizonsUnbound.MODID, name)));
         ALL.put(name, sound);
         return sound;
     }

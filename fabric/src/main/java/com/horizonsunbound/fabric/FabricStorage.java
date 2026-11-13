@@ -13,8 +13,8 @@ import java.util.Arrays;
 
 public final class FabricStorage implements Storage {
     private static final Codec<LongOpenHashSet> CODEC = Codec.LONG_STREAM.xmap(s -> new LongOpenHashSet(s.toArray()), set -> Arrays.stream(set.toLongArray()));
-    private static final AttachmentType<LongOpenHashSet> PLACED = AttachmentRegistry.create(FabricMod.id("player_placed"), b -> b.initializer(LongOpenHashSet::new).persistent(CODEC));
-    private static final AttachmentType<CompoundTag> DATA = AttachmentRegistry.create(FabricMod.id("persistent_data"), b -> b.initializer(CompoundTag::new).persistent(CompoundTag.CODEC).copyOnDeath());
+    private static final AttachmentType<LongOpenHashSet> PLACED = AttachmentRegistry.<LongOpenHashSet>builder().initializer(LongOpenHashSet::new).persistent(CODEC).buildAndRegister(FabricMod.id("player_placed"));
+    private static final AttachmentType<CompoundTag> DATA = AttachmentRegistry.<CompoundTag>builder().initializer(CompoundTag::new).persistent(CompoundTag.CODEC).copyOnDeath().buildAndRegister(FabricMod.id("persistent_data"));
     static void initialize() {}
     static void resetAfterClone(Entity entity) {
         // Match (Neo)Forge: only the three remembered storm flags are copied by the common clone hooks.

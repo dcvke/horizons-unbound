@@ -4,27 +4,43 @@
   "version": "${mod_version}",
   "name": "${mod_name}",
   "description": "Huge dimensional storms with their own skies, worlds and stories.",
-  "authors": ["dcvke"],
-  "contact": {
-    "homepage": "https://github.com/dcvke/horizons-unbound",
-    "sources": "https://github.com/dcvke/horizons-unbound",
-    "issues": "https://github.com/dcvke/horizons-unbound/issues"
-  },
+  "authors": [
+    "dcvke"
+  ],
   "license": "${mod_license}",
   "environment": "*",
   "entrypoints": {
-    "main": ["com.horizonsunbound.fabric.FabricMod"],
-    "client": ["com.horizonsunbound.fabric.FabricClient"],
-    "fabric-gametest": ["com.horizonsunbound.fabric.FabricTests"]
+    "main": [
+      "com.horizonsunbound.fabric.FabricMod"
+    ],
+    "client": [
+      "com.horizonsunbound.fabric.FabricClient"
+    ],
+    "fabric-gametest": [
+      "com.horizonsunbound.fabric.FabricTests"
+    ],
+    "modmenu": [
+      "com.horizonsunbound.fabric.ModMenuIntegration"
+    ]
   },
-  "mixins": ["horizons_unbound.mixins.json", "horizons_unbound.fabric.mixins.json"],
+  "mixins": [
+    "horizons_unbound.mixins.json",
+    "horizons_unbound.fabric.mixins.json"
+  ],
   "accessWidener": "horizons_unbound.accesswidener",
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "minecraft": "${minecraft_version}",
-    "java": ">=21",
+    "java": ">=17",
     "fabric-api": "*",
     "forgeconfigapiport": ">=${forge_config_api_port_version}"
   },
-  "suggests": {"modmenu": "*"}
+  "suggests": {
+    "modmenu": "*"
+  },
+  "contact": {
+    "homepage": "https://github.com/dcvke/horizons-unbound",
+    "sources": "https://github.com/dcvke/horizons-unbound",
+    "issues": "https://github.com/dcvke/horizons-unbound/issues"
+  }
 }

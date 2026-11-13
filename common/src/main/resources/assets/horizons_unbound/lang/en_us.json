@@ -103,5 +103,6 @@
   "horizons_unbound.configuration.stormViewDistance": "Storm view distance",
   "horizons_unbound.configuration.myCutscenes": "Cutscenes (for me)",
   "horizons_unbound.configuration.stormVolume": "Storm volume",
-  "horizons_unbound.configuration.shaderPackMode": "Shader pack mode"
+  "horizons_unbound.configuration.shaderPackMode": "Shader pack mode",
+  "horizons_unbound.configuration.client": "Client"
 }

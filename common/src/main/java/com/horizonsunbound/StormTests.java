@@ -48,8 +48,8 @@ public final class StormTests {
         s.grand = true;
         s.omen = 89;
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        Storm.STREAM_CODEC.encode(buf, s);
-        Storm t = Storm.STREAM_CODEC.decode(buf);
+        Storm.write(buf, s);
+        Storm t = Storm.read(buf);
         h.assertTrue(t.id.equals(s.id) && t.type == s.type && t.mix == s.mix && t.age == 1234 && t.life() == 567 && t.grand && t.omen == 89,
                 "a storm changed on its way to the client");
         h.succeed();

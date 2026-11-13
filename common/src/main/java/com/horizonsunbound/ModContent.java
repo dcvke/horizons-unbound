@@ -30,5 +30,7 @@ public final class ModContent {
             () -> EntityType.Builder.<EchoEntity>of(EchoEntity::new, MobCategory.MISC).sized(.6f, 1.8f).clientTrackingRange(8)
                     .updateInterval(1).noSave().noSummon().build("echo"));
 
+    public static final Supplier<net.minecraft.core.particles.SimpleParticleType> THAW_SMOKE = Suppliers.memoize(() -> new net.minecraft.core.particles.SimpleParticleType(false) {});
+
     private ModContent() {}
 }

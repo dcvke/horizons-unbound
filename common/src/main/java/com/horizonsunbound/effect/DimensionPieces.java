@@ -117,7 +117,7 @@ final class DimensionPieces {
         float f = rnd.nextFloat();
         Block b = switch (type) {
             case END -> f < .02f ? Blocks.CHORUS_FLOWER : null;
-            case OVERWORLD -> f < .25f ? Blocks.SHORT_GRASS : f < .28f ? Blocks.POPPY : null;
+            case OVERWORLD -> f < .25f ? Blocks.GRASS : f < .28f ? Blocks.POPPY : null;
             // shriekers placed like this never summon a warden (can_summon is false)
             case DEEP_DARK -> f < .02f ? Blocks.SCULK_SENSOR : f < .03f ? Blocks.SCULK_SHRIEKER : null;
             case NETHER -> switch (theme) {

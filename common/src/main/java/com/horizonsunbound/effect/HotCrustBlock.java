@@ -31,12 +31,12 @@ public class HotCrustBlock extends Block {
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(AGE); }
 
     @Override
-    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moved) {
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moved) {
         if (state.getValue(AGE) < 3) level.scheduleTick(pos, this, 80 + level.random.nextInt(80));
     }
 
     @Override
-    protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource rnd) {
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource rnd) {
         if (state.getValue(AGE) < 3) level.setBlock(pos, state.setValue(AGE, state.getValue(AGE) + 1), Block.UPDATE_CLIENTS);
     }
 

@@ -137,5 +137,6 @@
   "horizons_unbound.configuration.stormVolume": "Громкость штормов",
   "horizons_unbound.configuration.stormVolume.tooltip": "Громкость звуков самих штормов (гул, рождение, ветер внутри) поверх громкости игры.",
   "horizons_unbound.configuration.shaderPackMode": "Режим для шейдеров",
-  "horizons_unbound.configuration.shaderPackMode.tooltip": "Как рисовать шторм с шейдерами Iris. AUTO выбирает сам (FORWARD для Photon, CLASSIC для остальных). Если шторм с паком выглядит неправильно — невидим, тёмная дыра, чёрные квадраты вокруг свечения — попробуйте другой."
+  "horizons_unbound.configuration.shaderPackMode.tooltip": "Как рисовать шторм с шейдерами Iris. AUTO выбирает сам (FORWARD для Photon, CLASSIC для остальных). Если шторм с паком выглядит неправильно — невидим, тёмная дыра, чёрные квадраты вокруг свечения — попробуйте другой.",
+  "horizons_unbound.configuration.client": "Клиент"
 }

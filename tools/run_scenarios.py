@@ -34,7 +34,7 @@ def main():
     results = json.loads(results_file.read_text()) if args.resume and results_file.exists() else []
     wrapper = root / ('gradlew.bat' if os.name == 'nt' else 'gradlew')
     for scenario in args.scenarios:
-        if scenario not in SCENARIOS + ['config']:
+        if scenario not in SCENARIOS + ['config', 'claim']:
             parser.error('Unknown scenario: ' + scenario)
         previous = next((result for result in results if result['scenario'] == scenario), None)
         if previous and previous['exit'] == 0 and previous['done'] and not previous['failures'] and not previous['errors']:

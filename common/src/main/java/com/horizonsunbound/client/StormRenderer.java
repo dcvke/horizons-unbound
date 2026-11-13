@@ -7,7 +7,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -145,10 +144,13 @@ public final class StormRenderer {
                 var lookup = java.lang.invoke.MethodHandles.publicLookup();
                 irisApi = lookup.findStatic(api, "getInstance", java.lang.invoke.MethodType.methodType(api));
                 irisInUse = lookup.findVirtual(api, "isShaderPackInUse", java.lang.invoke.MethodType.methodType(boolean.class));
-                try {
-                    irisPackName = lookup.findStatic(Class.forName("net.irisshaders.iris.Iris"), "getCurrentPackName", java.lang.invoke.MethodType.methodType(String.class));
-                } catch (ReflectiveOperationException | LinkageError e) {
-                    irisPackName = null; // not part of Iris's public API: may go away; then auto means classic
+                for (String iris : new String[] {"net.irisshaders.iris.Iris", "net.coderbot.iris.Iris"}) {
+                    try {
+                        irisPackName = lookup.findStatic(Class.forName(iris), "getCurrentPackName", java.lang.invoke.MethodType.methodType(String.class));
+                        break;
+                    } catch (ReflectiveOperationException | LinkageError ignored) {
+                        irisPackName = null;
+                    }
                 }
             } catch (ReflectiveOperationException | LinkageError e) {
                 irisApi = null;
@@ -209,7 +211,7 @@ public final class StormRenderer {
                 new StormRenderer(storm, tx, ty, tz, partial, light, view).draw();
             } catch (RuntimeException e) { // never crash the game over a storm's looks: log it, drop the half-built mesh, stop drawing that storm
                 FAILED.add(storm.id);
-                Tesselator.getInstance().clear();
+                Tesselator.getInstance().getBuilder().discard();
                 LogUtils.getLogger().error("Horizons Unbound: a storm could not be drawn and is hidden from now on", e);
             }
         }
@@ -461,11 +463,10 @@ public final class StormRenderer {
         vertex(vc, x - s, y, z + s, 0, 1, color);
     }
 
-    private static BufferBuilder begin(RenderType type) { return Tesselator.getInstance().begin(type.mode(), type.format()); }
+    private static BufferBuilder begin(RenderType type) { BufferBuilder builder = Tesselator.getInstance().getBuilder(); builder.begin(type.mode(), type.format()); return builder; }
 
     private static void end(BufferBuilder builder, RenderType type) {
-        MeshData mesh = builder.build(); // null when everything was off screen
-        if (mesh != null) type.draw(mesh);
+        type.end(builder, com.mojang.blaze3d.vertex.VertexSorting.DISTANCE_TO_ORIGIN);
     }
 
     /**
@@ -855,7 +856,7 @@ public final class StormRenderer {
 
     /** One vertex in either storm format (BLOCK or NEW_ENTITY); the format just skips what it doesn't have. */
     private static void vertex(VertexConsumer vc, float x, float y, float z, float u, float v, int color) {
-        vc.addVertex(x, y, z, color, u, v, OverlayTexture.NO_OVERLAY, LightTexture.FULL_BRIGHT, 0, 1, 0);
+        vc.vertex(x, y, z).color(color).uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 1, 0).endVertex();
     }
 
     /** A line of camera-relative vertices; quads get stretched between two rows. */
@@ -983,5 +984,5 @@ public final class StormRenderer {
     private static float max4(float a, float b, float c, float d) { return Math.max(Math.max(a, b), Math.max(c, d)); }
     private static float frac(float x) { return x - Mth.floor(x); }
     private static float smooth(float x) { x = Mth.clamp(x, 0, 1); return x * x * (3 - 2 * x); }
-    private static ResourceLocation tex(String name) { return ResourceLocation.fromNamespaceAndPath(HorizonsUnbound.MODID, "textures/storm/" + name + ".png"); }
+    private static ResourceLocation tex(String name) { return new ResourceLocation(HorizonsUnbound.MODID, "textures/storm/" + name + ".png"); }
 }

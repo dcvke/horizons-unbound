@@ -2,7 +2,6 @@ package com.horizonsunbound;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -231,7 +230,7 @@ public final class Storm {
     }
 
     /** What clients need to draw it: identity, look, position, velocity and age. */
-    public static final StreamCodec<FriendlyByteBuf, Storm> STREAM_CODEC = StreamCodec.of((buf, s) -> {
+    public static void write(FriendlyByteBuf buf, Storm s) {
         buf.writeUUID(s.id);
         buf.writeByte(s.type.ordinal());
         buf.writeShort(s.diameter);
@@ -254,7 +253,9 @@ public final class Storm {
             buf.writeInt(m.z());
             buf.writeVarInt(m.a());
         }
-    }, buf -> {
+    }
+
+    public static Storm read(FriendlyByteBuf buf) {
         UUID id = buf.readUUID();
         StormType[] types = StormType.values();
         Storm s = new Storm(id, types[Mth.clamp(buf.readByte(), 0, types.length - 1)], buf.readShort(),
@@ -271,5 +272,5 @@ public final class Storm {
         for (int i = Math.min(buf.readVarInt(), 256); i > 0; i--)
             s.marks.add(new Mark(buf.readByte(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readVarInt()));
         return s;
-    });
+    }
 }

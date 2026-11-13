@@ -1,23 +1,23 @@
 package com.horizonsunbound;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 
 
 import java.util.List;
 
 /** config/horizons_unbound-common.toml: gameplay settings (the server's copy is the one that counts). */
 public final class StormsConfig {
-    public static final ModConfigSpec SPEC;
-    public static final ModConfigSpec.BooleanValue RESPECT_CLAIMS;
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> NO_STORM_BIOMES;
-    public static final ModConfigSpec.BooleanValue CUTSCENES, ALLOW_END, ALLOW_NETHER, ALLOW_OVERWORLD, ALLOW_DEEP_DARK;
-    public static final ModConfigSpec.BooleanValue REQUIRE_VISIT, TRANSFORM_TERRAIN, END_EFFECTS, NETHER_EFFECTS, OVERWORLD_EFFECTS, DEEP_DARK_EFFECTS;
-    public static final ModConfigSpec.IntValue SPAWN_INTERVAL, PATCH_EVERY, MAX_STRUCTURES, PROTECT_RADIUS, FRAGMENT_SIZE;
-    public static final ModConfigSpec.DoubleValue STRUCTURE_CHANCE, INTENSITY, MERGE_CHANCE, SPAWN_CHANCE;
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> END_STRUCTURES, NETHER_STRUCTURES, OVERWORLD_STRUCTURES, DEEP_DARK_STRUCTURES;
+    public static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec.BooleanValue RESPECT_CLAIMS;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> NO_STORM_BIOMES;
+    public static final ForgeConfigSpec.BooleanValue CUTSCENES, ALLOW_END, ALLOW_NETHER, ALLOW_OVERWORLD, ALLOW_DEEP_DARK;
+    public static final ForgeConfigSpec.BooleanValue REQUIRE_VISIT, TRANSFORM_TERRAIN, END_EFFECTS, NETHER_EFFECTS, OVERWORLD_EFFECTS, DEEP_DARK_EFFECTS;
+    public static final ForgeConfigSpec.IntValue SPAWN_INTERVAL, PATCH_EVERY, MAX_STRUCTURES, PROTECT_RADIUS, FRAGMENT_SIZE;
+    public static final ForgeConfigSpec.DoubleValue STRUCTURE_CHANCE, INTENSITY, MERGE_CHANCE, SPAWN_CHANCE;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> END_STRUCTURES, NETHER_STRUCTURES, OVERWORLD_STRUCTURES, DEEP_DARK_STRUCTURES;
 
     static {
-        ModConfigSpec.Builder b = new ModConfigSpec.Builder();
+        ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
         b.push("spawning");
         REQUIRE_VISIT = b.comment("Natural Nether/End storms only appear for a player who has already been to that dimension.",
                 "Until then only Overworld storms spawn naturally. /storm spawn ignores this.").define("requireVisit", true);
@@ -37,7 +37,7 @@ public final class StormsConfig {
                 "breaking blocks): asked through the same check a player's block breaking goes through.").define("respectClaims", true);
         NO_STORM_BIOMES = b.comment("Biomes storms never come to on their own: biome ids (minecraft:mushroom_fields) or biome tags (#minecraft:is_ocean).",
                 "Blocks storms never touch: the data pack block tag horizons_unbound:storm_proof. Ground they may reshape: horizons_unbound:reshapable.")
-                .defineListAllowEmpty("noStormBiomes", List.of("minecraft:mushroom_fields"), () -> "", o -> o instanceof String);
+                .defineListAllowEmpty(List.of("noStormBiomes"), () -> List.of("minecraft:mushroom_fields"), o -> o instanceof String);
         b.pop().push("dimensionPieces");
         TRANSFORM_TERRAIN = b.comment("Storms replace patches of natural ground under their column with blocks of their dimension.")
                 .define("transformTerrain", true);
@@ -53,13 +53,13 @@ public final class StormsConfig {
         STRUCTURE_CHANCE = b.comment("Chance per 10-second try that a storm sets down a structure under its column.")
                 .defineInRange("structureChance", .08, 0, 1);
         END_STRUCTURES = b.comment("Structures an End storm can bring (structure ids). Empty = none.")
-                .defineListAllowEmpty("endStructures", List.of("minecraft:end_city"), () -> "", o -> o instanceof String);
+                .defineListAllowEmpty(List.of("endStructures"), () -> List.of("minecraft:end_city"), o -> o instanceof String);
         NETHER_STRUCTURES = b.comment("Structures a Nether storm can bring.")
-                .defineListAllowEmpty("netherStructures", List.of("minecraft:fortress", "minecraft:bastion_remnant", "minecraft:ruined_portal_nether"), () -> "", o -> o instanceof String);
+                .defineListAllowEmpty(List.of("netherStructures"), () -> List.of("minecraft:fortress", "minecraft:bastion_remnant", "minecraft:ruined_portal_nether"), o -> o instanceof String);
         DEEP_DARK_STRUCTURES = b.comment("Structures a Deep Dark (sculk) storm can bring.")
-                .defineListAllowEmpty("deepDarkStructures", List.of("minecraft:ancient_city"), () -> "", o -> o instanceof String);
+                .defineListAllowEmpty(List.of("deepDarkStructures"), () -> List.of("minecraft:ancient_city"), o -> o instanceof String);
         OVERWORLD_STRUCTURES = b.comment("Structures an Overworld storm can bring into other dimensions.")
-                .defineListAllowEmpty("overworldStructures", List.of("minecraft:ruined_portal"), () -> "", o -> o instanceof String);
+                .defineListAllowEmpty(List.of("overworldStructures"), () -> List.of("minecraft:ruined_portal"), o -> o instanceof String);
         b.pop().push("effects");
         END_EFFECTS = b.comment("End storms: echoes, stalling projectiles, seams, distance jumps, gravity waves.").define("end", true);
         NETHER_EFFECTS = b.comment("Nether storms: heat waves, hot crust, ash air, soul fire, tempering.").define("nether", true);

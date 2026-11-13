@@ -16,18 +16,13 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -45,7 +40,7 @@ import java.util.Set;
  * heart is tempered by the wave passing over it. (Ash air is client-side: StormAtmosphere / ClientEffects.)
  */
 public final class NetherEffects {
-    private static final ResourceLocation TEMPERED = ResourceLocation.fromNamespaceAndPath(HorizonsUnbound.MODID, "tempered");
+    private static final java.util.UUID TEMPERED = java.util.UUID.fromString("8c55b71f-4471-4d6c-902c-52cc2e749482");
 
     private NetherEffects() {}
 
@@ -68,7 +63,7 @@ public final class NetherEffects {
                 if (d < s.radius() * .5) temper(level, item); // only in the storm's heart
             } else if (e instanceof LivingEntity le && !le.isSpectator() && !le.fireImmune()
                     && level.canSeeSky(BlockPos.containing(le.getX(), le.getEyeY(), le.getZ()))) {
-                le.igniteForSeconds(4);
+                le.setSecondsOnFire(4);
                 crust(level, le.getBlockX(), le.getBlockZ(), 3, .45f);
             }
         }
@@ -120,7 +115,7 @@ public final class NetherEffects {
             level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, q.getX() + .5, q.getY() + .6, q.getZ() + .5, 12, .2, .5, .2, .06);
             level.sendParticles(ParticleTypes.SOUL, q.getX() + .5, q.getY() + 1, q.getZ() + .5, 2, .2, .2, .2, .02);
         }
-        level.playSound(null, lit.get(0), SoundEvents.SOUL_ESCAPE.value(), SoundSource.BLOCKS, 2, .8f);
+        level.playSound(null, lit.get(0), SoundEvents.SOUL_ESCAPE, SoundSource.BLOCKS, 2, .8f);
         for (Monster mob : level.getEntitiesOfClass(Monster.class, p.getBoundingBox().inflate(24)))
             if (mob.getTarget() == null) mob.setTarget(p);
     }
@@ -130,22 +125,25 @@ public final class NetherEffects {
     }
 
     /** Gear the wave passes over in the heart: +50% durability, +1 attack damage (weapons, tools) or +1 toughness (armor). */
-    private static void temper(ServerLevel level, ItemEntity item) {
+    static void temper(ServerLevel level, ItemEntity item) {
         ItemStack stack = item.getItem().copy();
-        if (!stack.isDamageableItem() || stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).contains("ds_tempered")) return;
-        stack.set(DataComponents.MAX_DAMAGE, stack.getMaxDamage() * 3 / 2);
-        ItemAttributeModifiers mods = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
-        if (stack.getItem() instanceof ArmorItem armor) {
-            mods = mods.withModifierAdded(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(TEMPERED, 1, AttributeModifier.Operation.ADD_VALUE),
-                    EquipmentSlotGroup.bySlot(armor.getEquipmentSlot()));
-        } else if (mods.modifiers().stream().anyMatch(e -> e.attribute().value() == Attributes.ATTACK_DAMAGE.value())) {
-            mods = mods.withModifierAdded(Attributes.ATTACK_DAMAGE, new AttributeModifier(TEMPERED, 1, AttributeModifier.Operation.ADD_VALUE),
-                    EquipmentSlotGroup.MAINHAND);
+        if (!stack.isDamageableItem() || stack.getOrCreateTag().getBoolean("ds_tempered")) return;
+        // AttributeModifiers replaces defaults in 1.20.1, so snapshot every slot before adding anything.
+        if (!stack.getOrCreateTag().contains("AttributeModifiers", net.minecraft.nbt.Tag.TAG_LIST)) {
+            var defaults = new java.util.EnumMap<net.minecraft.world.entity.EquipmentSlot,
+                    com.google.common.collect.Multimap<net.minecraft.world.entity.ai.attributes.Attribute, AttributeModifier>>(net.minecraft.world.entity.EquipmentSlot.class);
+            for (var slot : net.minecraft.world.entity.EquipmentSlot.values()) defaults.put(slot, com.google.common.collect.ImmutableMultimap.copyOf(stack.getAttributeModifiers(slot)));
+            defaults.forEach((slot, modifiers) -> modifiers.forEach((attribute, modifier) -> stack.addAttributeModifier(attribute, modifier, slot)));
         }
-        stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods);
-        CustomData.update(DataComponents.CUSTOM_DATA, stack, t -> t.putBoolean("ds_tempered", true));
-        stack.set(DataComponents.LORE, new ItemLore(List.of(Component.translatable("item.horizons_unbound.tempered").withStyle(ChatFormatting.GOLD))));
-        stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        if (stack.getItem() instanceof ArmorItem armor) {
+            stack.addAttributeModifier(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(TEMPERED, "Horizons Unbound tempered", 1, AttributeModifier.Operation.ADDITION), armor.getEquipmentSlot());
+        } else if (stack.getAttributeModifiers(net.minecraft.world.entity.EquipmentSlot.MAINHAND).containsKey(Attributes.ATTACK_DAMAGE)) {
+            stack.addAttributeModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(TEMPERED, "Horizons Unbound tempered", 1, AttributeModifier.Operation.ADDITION), net.minecraft.world.entity.EquipmentSlot.MAINHAND);
+        }
+        stack.getOrCreateTag().putBoolean("ds_tempered", true);
+        net.minecraft.nbt.ListTag lore = new net.minecraft.nbt.ListTag();
+        lore.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.translatable("item.horizons_unbound.tempered").withStyle(ChatFormatting.GOLD))));
+        stack.getOrCreateTagElement("display").put("Lore", lore);
         item.setItem(stack);
         level.sendParticles(ParticleTypes.LAVA, item.getX(), item.getY() + .3, item.getZ(), 12, .2, .2, .2, 0);
         level.playSound(null, item.blockPosition(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1, .6f);

@@ -1,0 +1,4 @@
+wait 40
+claim
+wait 80
+note Claim integration checked.

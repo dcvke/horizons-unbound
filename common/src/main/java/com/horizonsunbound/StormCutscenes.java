@@ -1,10 +1,6 @@
 package com.horizonsunbound;
 
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,13 +41,11 @@ public final class StormCutscenes {
      * Server to client: "watch this storm" - be born (mode BIRTH, it rises in PREROLL ticks) or be found (mode 1 + the
      * kind found: a merged storm may be new by its second kind). Client to server: "I stopped watching".
      */
-    public record Payload(UUID storm, int mode) implements CustomPacketPayload {
-        public static final Type<Payload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(HorizonsUnbound.MODID, "cutscene"));
-        public static final StreamCodec<FriendlyByteBuf, Payload> CODEC = StreamCodec.composite(
-                UUIDUtil.STREAM_CODEC, Payload::storm, ByteBufCodecs.VAR_INT, Payload::mode, Payload::new);
-
-        @Override
-        public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    public record Payload(UUID storm, int mode) implements StormPacket {
+        public static final ResourceLocation ID = new ResourceLocation(HorizonsUnbound.MODID, "cutscene");
+        public ResourceLocation id() { return ID; }
+        public void write(FriendlyByteBuf buf) { buf.writeUUID(storm); buf.writeVarInt(mode); }
+        public static Payload read(FriendlyByteBuf buf) { return new Payload(buf.readUUID(), buf.readVarInt()); }
     }
 
     /**

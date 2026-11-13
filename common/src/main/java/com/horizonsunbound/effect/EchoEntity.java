@@ -45,9 +45,9 @@ public class EchoEntity extends Mob {
     public UUID owner() { return entityData.get(OWNER).orElse(null); }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(OWNER, Optional.empty());
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(OWNER, Optional.empty());
     }
 
     @Override

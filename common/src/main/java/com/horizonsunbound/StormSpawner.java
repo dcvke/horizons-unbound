@@ -1,6 +1,6 @@
 package com.horizonsunbound;
 
-import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.Advancement;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -88,7 +88,7 @@ public final class StormSpawner {
         float r = diameter / 2f;
         List<StormType> kinds = unlocked(player);
         if (kinds.isEmpty()) return null; // every kind turned off
-        int view = Math.min(level.getServer().getPlayerList().getViewDistance(), player.requestedViewDistance()) * 16;
+        int view = Math.min(level.getServer().getPlayerList().getViewDistance(), com.horizonsunbound.platform.ViewDistances.get(player)) * 16;
         // the far edge of what the player sees, so it shows from afar; with a short view distance just far enough away
         double dist = Math.max(view - 24, r + KEEP_AWAY + 20);
         for (int attempt = 0; attempt < 8; attempt++) {
@@ -122,7 +122,7 @@ public final class StormSpawner {
     }
 
     private static boolean done(ServerPlayer player, String advancement) {
-        AdvancementHolder a = player.server.getAdvancements().get(ResourceLocation.withDefaultNamespace(advancement));
+        Advancement a = player.server.getAdvancements().getAdvancement(new ResourceLocation(advancement));
         return a != null && player.getAdvancements().getOrStartProgress(a).isDone();
     }
 
@@ -144,7 +144,7 @@ public final class StormSpawner {
     /** True when no player, bed, world spawn or village is within keep blocks of pos. */
     private static boolean isClear(ServerLevel level, BlockPos pos, float keep) {
         double keepSq = keep * keep;
-        if (level.getLevelData().getSpawnPos().distSqr(pos) < keepSq) return false;
+        if (level.getSharedSpawnPos().distSqr(pos) < keepSq) return false;
         for (ServerPlayer p : level.getServer().getPlayerList().getPlayers()) {
             if (p.level() == level && p.blockPosition().distSqr(pos) < keepSq) return false;
             BlockPos bed = p.getRespawnPosition();

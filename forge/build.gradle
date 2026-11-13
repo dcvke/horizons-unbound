@@ -1,0 +1,97 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+mixin {
+    add(sourceSets.main, "${mod_id}.refmap.json")
+
+    config("${mod_id}.mixins.json")
+    config("${mod_id}.forge.mixins.json")
+}
+
+legacyForge {
+    version = "${minecraft_version}-${forge_version}"
+
+    validateAccessTransformers = true
+
+    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers = [at.absolutePath]
+    }
+    parchment {
+        minecraftVersion = parchment_minecraft_version
+        mappingsVersion = parchment_mappings_version
+    }
+    runs {
+        client {
+            client()
+        }
+        clientTest {
+            client()
+            gameDirectory = file(project.findProperty('testDirectory') ?: 'run-test')
+            systemProperty 'hu.test.reuseWorld', "${project.findProperty('reuseWorld') ?: 'false'}"
+            systemProperty 'hu.test.script', rootProject.file("tools/scenarios/${project.findProperty('scenario') ?: 'birth'}.txt").absolutePath
+            systemProperty 'hu.test.hidden', "${project.findProperty('hidden') ?: 'false'}"
+            programArguments.addAll '--width', '1280', '--height', '720'
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = file('run-gametest')
+        }
+        configureEach { systemProperty 'forge.enabledGameTestNamespaces', mod_id }
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+        server {
+            server()
+            gameDirectory = file(project.findProperty('serverDirectory') ?: 'run-server')
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
+dependencies {
+    compileOnly project(":common")
+    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
+    if (project.hasProperty('compatModsDirectory')) {
+        modRuntimeOnly fileTree(project.file(project.property('compatModsDirectory'))) { include '*.jar' }
+    }
+}
+
+jar {
+    finalizedBy('reobfJar')
+    manifest.attributes([
+            "MixinConfigs": "${mod_id}.mixins.json,${mod_id}.forge.mixins.json"
+    ])
+}
+
+dependencies {
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.0'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.5.0'
+    jarJar(implementation('io.github.llamalad7:mixinextras-forge')) {
+        version { strictly '[0.5.0,0.6)'; prefer '0.5.0' }
+    }
+}
+processResources {
+    var properties = [mod_id: mod_id, mod_name: mod_name, mod_version: mod_version, mod_license: mod_license,
+                      minecraft_version_range: minecraft_version_range, forge_version: forge_version]
+    inputs.properties properties
+    filesMatching('META-INF/mods.toml') { expand properties }
+    doLast {
+        fileTree(destinationDir).matching { include '*.mixins.json' }.each { config ->
+            def json = new groovy.json.JsonSlurper().parse(config)
+            json.refmap = 'horizons_unbound.refmap.json'
+            config.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
+        }
+    }
+}

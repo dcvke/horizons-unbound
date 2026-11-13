@@ -19,7 +19,7 @@ public abstract class ServerLevelMixin {
     @Inject(method = "tickPassenger", at = @At("HEAD"))
     private void horizonsUnbound$passenger(Entity vehicle, Entity passenger, CallbackInfo ci) { EndEffects.onEntityTick(passenger); }
     @Inject(method = "gameEvent", at = @At("HEAD"))
-    private void horizonsUnbound$vibration(Holder<GameEvent> event, Vec3 pos, GameEvent.Context context, CallbackInfo ci) {
+    private void horizonsUnbound$vibration(GameEvent event, Vec3 pos, GameEvent.Context context, CallbackInfo ci) {
         SculkEffects.onGameEvent((ServerLevel) (Object) this, context.sourceEntity(), event);
     }
 }

@@ -96,7 +96,7 @@ public final class OverworldEffects {
                 if (us.is(Blocks.SNOW) && StormEffects.free(level, up)) level.setBlock(up, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
                 else if ((gs.is(Blocks.ICE) || gs.is(Blocks.FROSTED_ICE)) && StormEffects.free(level, g)) level.setBlock(g, Blocks.WATER.defaultBlockState(), Block.UPDATE_ALL);
                 else return;
-                level.sendParticles(ParticleTypes.WHITE_SMOKE, x + .5, up.getY() + .3, z + .5, 4, .3, .1, .3, .01);
+                level.sendParticles(com.horizonsunbound.ModContent.THAW_SMOKE.get(), x + .5, up.getY() + .3, z + .5, 4, .3, .1, .3, .01);
             }
             default -> { // growth: plants grow a few steps, grass sprouts flowers
                 if (us.isRandomlyTicking()) {

@@ -9,7 +9,6 @@ import com.horizonsunbound.effect.HotCrustBlock;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Axis;
@@ -56,7 +55,7 @@ import java.util.Iterator;
  */
 
 public final class InsideStorm {
-    private static final ResourceLocation VIGNETTE = ResourceLocation.withDefaultNamespace("textures/misc/vignette.png");
+    private static final ResourceLocation VIGNETTE = new ResourceLocation("textures/misc/vignette.png");
     private static final BlockState[] SHARDS = {Blocks.END_STONE.defaultBlockState(), Blocks.PURPUR_BLOCK.defaultBlockState(),
             Blocks.OBSIDIAN.defaultBlockState(), Blocks.CHORUS_FLOWER.defaultBlockState(), Blocks.END_STONE_BRICKS.defaultBlockState()};
     private static StormType type;        // the storm kind we are (or were last) inside
@@ -144,7 +143,7 @@ public final class InsideStorm {
             SoundEvent v = switch (rnd.nextInt(4)) {
                 case 0 -> SoundEvents.GHAST_AMBIENT;
                 case 1 -> SoundEvents.PIGLIN_AMBIENT;
-                case 2 -> SoundEvents.SOUL_ESCAPE.value();
+                case 2 -> SoundEvents.SOUL_ESCAPE;
                 default -> SoundEvents.AMBIENT_SOUL_SAND_VALLEY_MOOD.value();
             };
             sound(mc, p, rnd, v, .25f, .6f + rnd.nextFloat() * .2f, 24);
@@ -337,7 +336,8 @@ public final class InsideStorm {
     private static void shards(Minecraft mc, Vec3 cam, float t) {
         Vec3 c = mc.player.getPosition(1).add(0, 1, 0);
         RenderType rt = RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS);
-        BufferBuilder b = Tesselator.getInstance().begin(rt.mode(), rt.format());
+        BufferBuilder b = Tesselator.getInstance().getBuilder();
+        b.begin(rt.mode(), rt.format());
         PoseStack pose = new PoseStack();
         for (int i = 0; i < 10; i++) {
             float rad = 3 + (i * 37 % 10) * .35f, ang = i * 2.39f + t * (.15f + (i % 3) * .05f), size = .32f + (i * 13 % 7) * .04f;
@@ -350,10 +350,8 @@ public final class InsideStorm {
             cube(b, pose.last(), mc.getBlockRenderer().getBlockModel(SHARDS[i % SHARDS.length]).getParticleIcon());
             pose.popPose();
         }
-        MeshData mesh = b.build();
-        if (mesh != null) rt.draw(mesh);
+        rt.end(b, com.mojang.blaze3d.vertex.VertexSorting.DISTANCE_TO_ORIGIN);
     }
-
     /** A unit cube centred on the pose origin, every face showing the sprite. */
     private static void cube(BufferBuilder b, PoseStack.Pose pose, TextureAtlasSprite sprite) {
         float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
@@ -364,8 +362,8 @@ public final class InsideStorm {
         float[][] uv = {{u0, v1}, {u1, v1}, {u1, v0}, {u0, v0}};
         for (float[] f : faces) {
             for (int k = 0; k < 4; k++) {
-                b.addVertex(pose, f[3 + k * 3] * .5f, f[4 + k * 3] * .5f, f[5 + k * 3] * .5f).setColor(-1).setUv(uv[k][0], uv[k][1])
-                        .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(pose, f[0], f[1], f[2]);
+                b.vertex(pose.pose(), f[3 + k * 3] * .5f, f[4 + k * 3] * .5f, f[5 + k * 3] * .5f).color(-1).uv(uv[k][0], uv[k][1])
+                        .overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(pose.normal(), f[0], f[1], f[2]).endVertex();
             }
         }
     }
@@ -373,7 +371,8 @@ public final class InsideStorm {
     /** Footprints glowing like hot metal, cooling over three seconds. */
     private static void footprints(Vec3 cam) {
         RenderType rt = StormRenderer.glowType();
-        BufferBuilder b = Tesselator.getInstance().begin(rt.mode(), rt.format());
+        BufferBuilder b = Tesselator.getInstance().getBuilder();
+        b.begin(rt.mode(), rt.format());
         for (int pass = 0; pass < 2; pass++) for (float[] f : PRINTS) { // twice: additive, so twice as bright
             float fade = 1 - f[5] / 60, k = fade * fade * weight;
             int color = 0xFF000000 | (int) (255 * k) << 16 | (int) (110 * k) << 8 | (int) (20 * k);
@@ -385,14 +384,11 @@ public final class InsideStorm {
             vertex(b, cx + lx + wx, cy, cz + lz + wz, 1, 1, color);
             vertex(b, cx + lx - wx, cy, cz + lz - wz, 0, 1, color);
         }
-        MeshData mesh = b.build();
-        if (mesh != null) {
-            rt.draw(mesh);
-        }
+        rt.end(b, com.mojang.blaze3d.vertex.VertexSorting.DISTANCE_TO_ORIGIN);
     }
 
     private static void vertex(BufferBuilder b, float x, float y, float z, float u, float v, int color) {
-        b.addVertex(x, y, z, color, u, v, OverlayTexture.NO_OVERLAY, LightTexture.FULL_BRIGHT, 0, 1, 0);
+        b.vertex(x, y, z).color(color).uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 1, 0).endVertex();
     }
 
     /** The flash of the storm's color around the screen edge when crossing its wall. */

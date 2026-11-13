@@ -32,7 +32,7 @@ public final class SculkEffects {
         if (s.age % 10 == 0 && s.marks.removeIf(k -> k.kind() == Storm.Mark.PULSE && s.age - k.a() > HEARD_FOR)) m.resync();
     }
 
-    public static void onGameEvent(ServerLevel level, net.minecraft.world.entity.Entity cause, net.minecraft.core.Holder<net.minecraft.world.level.gameevent.GameEvent> event) {
+    public static void onGameEvent(ServerLevel level, net.minecraft.world.entity.Entity cause, net.minecraft.world.level.gameevent.GameEvent event) {
         if (!(cause instanceof ServerPlayer p) || p.isSpectator()) return;
         if (!event.is(GameEventTags.VIBRATIONS)) return;
         if (p.isSteppingCarefully() && event.is(GameEventTags.IGNORE_VIBRATIONS_SNEAKING)) return;

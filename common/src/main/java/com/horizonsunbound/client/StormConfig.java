@@ -1,21 +1,21 @@
 package com.horizonsunbound.client;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 
 
 /** config/horizons_unbound-client.toml */
 public final class StormConfig {
-    public static final ModConfigSpec SPEC;
-    public static final ModConfigSpec.IntValue VIEW_DISTANCE;
-    public static final ModConfigSpec.BooleanValue CUTSCENES;
-    public static final ModConfigSpec.DoubleValue VOLUME;
-    public static final ModConfigSpec.EnumValue<ShaderMode> SHADER_MODE;
+    public static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec.IntValue VIEW_DISTANCE;
+    public static final ForgeConfigSpec.BooleanValue CUTSCENES;
+    public static final ForgeConfigSpec.DoubleValue VOLUME;
+    public static final ForgeConfigSpec.EnumValue<ShaderMode> SHADER_MODE;
 
     /** How the storm is drawn under an Iris shader pack (StormRenderer.forwardPack()). */
     public enum ShaderMode { AUTO, CLASSIC, FORWARD }
 
     static {
-        ModConfigSpec.Builder b = new ModConfigSpec.Builder();
+        ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
         VIEW_DISTANCE = b.comment(
                         "How far away storms are drawn, in chunks, counted to the nearest part of the storm.",
                         "0 = as far as your render distance (default; with Distant Horizons at least 64 chunks). Lower it to save performance, raise it to see storms",
