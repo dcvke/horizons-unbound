@@ -3,6 +3,10 @@ plugins {
     id 'net.neoforged.moddev.legacyforge'
 }
 
+if (project.hasProperty('compatModsDirectory')) {
+    repositories { flatDir { dirs project.file(project.property('compatModsDirectory')) } }
+}
+
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
 
@@ -64,7 +68,9 @@ dependencies {
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
     if (project.hasProperty('compatModsDirectory')) {
-        modRuntimeOnly fileTree(project.file(project.property('compatModsDirectory'))) { include '*.jar' }
+        fileTree(project.file(project.property('compatModsDirectory'))).matching { include '*.jar' }.files.each { mod ->
+            modRuntimeOnly group: 'local.compat', name: mod.name.substring(0, mod.name.length() - 4), version: '1'
+        }
     }
 }
 
