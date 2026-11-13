@@ -57,8 +57,9 @@ For local development, put the binary jar in your addon's `libs/` and add the ap
 ```groovy
 // NeoForge with ModDevGradle
 dependencies { implementation files('libs/horizons_unbound-neoforge-1.21.1-0.2.0.jar') }
-// Forge with ModDevGradle legacyforge: remap SRG names for development
-dependencies { modImplementation files('libs/horizons_unbound-forge-1.20.1-0.2.0.jar') }
+// Forge with ModDevGradle legacyforge: use module coordinates to remap SRG names
+repositories { flatDir { dirs 'libs' } }
+dependencies { modImplementation group: 'local.mods', name: 'horizons_unbound-forge-1.20.1-0.2.0', version: 'local' }
 // Fabric with Loom: use modImplementation so Loom remaps the production jar
 dependencies { modImplementation files('libs/horizons_unbound-fabric-1.21.1-0.2.0.jar') }
 ```
