@@ -31,7 +31,7 @@ public final class StormConfig {
         SPEC = b.build();
     }
 
-    private static final boolean DISTANT_HORIZONS = com.horizonsunbound.platform.Services.PLATFORM.isModLoaded("distanthorizons");
+    static final boolean DISTANT_HORIZONS = com.horizonsunbound.platform.Services.PLATFORM.isModLoaded("distanthorizons");
 
     /** Blocks. */
     static int viewDistance(int renderDistanceChunks) {

@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.StructureTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +68,7 @@ public final class StormSpawner {
         for (int attempt = 0; attempt < 8; attempt++) {
             float ang = level.random.nextFloat() * Mth.TWO_PI, dist = (first.radius() + r) * 1.1f + 30;
             int x = Mth.floor(first.x + Mth.cos(ang) * dist), z = Mth.floor(first.z + Mth.sin(ang) * dist);
-            BlockPos pos = new BlockPos(x, Storm.groundUnder(level, x + .5, z + .5, r, true), z);
+            BlockPos pos = new BlockPos(x, Storm.groundUnder(level, x + .5, z + .5, r, Mth.floor(first.y)), z);
             if (!isClear(level, pos, r + 40)) continue;
             Storm twin = new Storm(UUID.randomUUID(), types.get(level.random.nextInt(types.size())), diameter, x + .5, pos.getY(), z + .5);
             twin.target = first.id;
@@ -94,7 +95,8 @@ public final class StormSpawner {
         for (int attempt = 0; attempt < 8; attempt++) {
             float ang = level.random.nextFloat() * Mth.TWO_PI;
             int x = Mth.floor(player.getX() + Mth.cos(ang) * dist), z = Mth.floor(player.getZ() + Mth.sin(ang) * dist);
-            BlockPos pos = new BlockPos(x, Storm.groundUnder(level, x + .5, z + .5, r, true), z);
+            BlockPos pos = new BlockPos(x, Storm.groundUnder(level, x + .5, z + .5, r,
+                    level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, player.getBlockX(), player.getBlockZ())), z);
             if (!isClear(level, pos, r + KEEP_AWAY) || !StormsConfig.biomeAllowed(level.getBiome(pos))) continue;
             Storm storm = new Storm(UUID.randomUUID(), kinds.get(level.random.nextInt(kinds.size())), diameter, x + .5, pos.getY(), z + .5);
             if (grand) {

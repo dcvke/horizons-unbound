@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 — Rendering and storm fixes
+
+- Kept cutscene cameras within the loaded world and adjusted fog to hide its edge, preventing distant shots from showing cut-off terrain and empty space. The featured storm remains visible during its cutscene even at short render distances.
+- Fixed storms spawning at the bottom of the world when announced over unloaded chunks. They now use nearby ground height until the terrain beneath them loads.
+- Fixed glowing arcs beneath the cloud cap showing through distant hills and buildings.
+- Fixed storm creatures remaining indefinitely after wandering away or being unloaded. With departure enabled, they now leave when no storm is nearby.
+- Updated End storm echoes to use Sodium's optimized rendering path.
+- Stopped rain around Fire Twisters, preventing their blazes from taking rain damage immediately after spawning.
+
 ## 1.0.0 — Initial release
 
 Available for Minecraft 1.21.1 on NeoForge and Fabric, and Minecraft 1.20.1 on Forge and Fabric. All four builds include the same gameplay features, content and addon API. Download the jar matching your Minecraft version and loader; install it on both the server and clients.

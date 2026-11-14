@@ -124,6 +124,7 @@ public final class Cutscene {
     private final Vec3 eye0, look0, base, seed;
     private final float h;
     private final float size;               // the player's height in ordinary players (Pehkui, Origins): the close shots keep their framing
+    private final double reach;             // how far from the player the camera may go: the world is only loaded round them
     private final Vec3[] kp, kl, mp, ml;  // key shots: where, looking at what, and the curve's tangents there
     private final byte[] kind;              // how each stretch between two shots goes
     private int ticks, lost, skipHold, fade = -1;
@@ -150,6 +151,7 @@ public final class Cutscene {
         seed = base.add(0, 2, 0);
         h = 3 * s.radius(); // the column's height (StormRenderer)
         size = Mth.clamp(p.getBbHeight() / 1.8f, .25f, 8);
+        reach = Mth.clamp(loaded() * .35, 24, 96);
         strong = new boolean[sc.lines.length];
         for (int i = 0; i < strong.length; i++) strong[i] = line(i).matches(".*(\\*|\\p{Lu}{3}).*");
         long t0 = System.nanoTime();
@@ -177,6 +179,9 @@ public final class Cutscene {
 
     public static boolean active() { return active != null; }
 
+    /** True for the storm the running cutscene is about. */
+    public static boolean about(UUID id) { Cutscene c = active; return c != null && c.stormId.equals(id); }
+
     private static boolean detachedView; // the last frame's camera was out of the player's eyes
 
     /**
@@ -197,11 +202,26 @@ public final class Cutscene {
         try {
             View v = c.frame(p, partial);
             detachedView = v != null && v.detached();
+            away = v == null ? 0 : v.pos().subtract(p.getEyePosition(partial)).horizontalDistance();
             return v;
         } catch (RuntimeException e) {
             fail(e);
             return null;
         }
+    }
+
+    private static double away; // the last frame's camera: how far it was from the player's eyes, across
+
+    /** Blocks of world loaded round the player (the client's render distance, or the server's if that is less). */
+    private static double loaded() { return Minecraft.getInstance().options.getEffectiveRenderDistance() * 16.0; }
+
+    /**
+     * The terrain fog's far end while the camera is out away from the player: the loaded world ends round them, so
+     * from out there its edge would show as a cut into the void. The fog closes in to hide it.
+     */
+    public static float fogLimit(float far) {
+        if (active == null || away <= 0 || StormConfig.DISTANT_HORIZONS) return far; // its far land fills in past the loaded world
+        return (float) Math.min(far, Math.max(24, loaded() - away - Math.min(away, 24))); // a chunk's margin: the edge ones aren't drawn
     }
 
     /** Something in the cutscene threw (another mod in the way, say): it ends right there, the game goes on. */
@@ -540,6 +560,11 @@ public final class Cutscene {
     /** A spot at this angle and distance from the storm, up above its foot (or above the ground there, if ground). */
     private Vec3 around(ClientLevel level, boolean roof, double angle, double dist, float up, boolean ground) {
         double x = base.x + Math.cos(angle) * dist, z = base.z + Math.sin(angle) * dist;
+        double dx = x - eye0.x, dz = z - eye0.z, d = Math.sqrt(dx * dx + dz * dz);
+        if (d > reach) { // back towards the player, into the loaded world
+            x = eye0.x + dx * reach / d;
+            z = eye0.z + dz * reach / d;
+        }
         double surface = roof ? base.y : level.getHeight(Heightmap.Types.MOTION_BLOCKING, Mth.floor(x), Mth.floor(z));
         return new Vec3(x, ground ? surface + up : roof ? base.y + up : Math.max(base.y + up, surface + 3), z);
     }

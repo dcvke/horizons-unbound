@@ -1,0 +1,19 @@
+# An End storm's echo: a jump inside the storm leaves a violet, see-through copy of the player (EchoRenderer).
+/storm clear
+/time set 6000
+/gamerule doMobSpawning false
+/gamemode survival
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~ ~ 0 0
+/storm spawn end 100
+wait 40
+/tp @s ~ 80 ~90 0 0
+/fill ~-6 79 ~-6 ~6 79 ~6 minecraft:stone
+wait 40
+/tp @s ~ ~0.5 ~
+wait 3
+/execute if entity @e[type=horizons_unbound:echo]
+/tp @s ~ 80 ~-4 0 10
+wait 12
+shot echo

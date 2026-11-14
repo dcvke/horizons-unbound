@@ -11,6 +11,11 @@ wait 900
 /tp @s ~ ~ ~ 0 -8
 wait 10
 shot open
+# a wall 50 blocks ahead and 40 high: no arc of the cap behind it may show on it
+/fill ~-50 ~-12 ~50 ~50 ~40 ~50 minecraft:stone
+wait 30
+shot mid_wall
+/fill ~-50 ~-12 ~50 ~50 ~40 ~50 minecraft:air
 # the arcs must still shine through the cloud: from below, and from above the cap
 /tp @s ~ ~ ~ 0 -55
 wait 10

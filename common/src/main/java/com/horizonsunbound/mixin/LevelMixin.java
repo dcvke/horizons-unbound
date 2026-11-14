@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Rain pockets under Overworld storms: in a dry pocket vanilla treats a spot as not rained on (fire, farmland,
- * cauldrons, lightning), and on the client the rain fades where the camera stands in one.
+ * Rain pockets under Overworld storms, no rain round Nether storms: in a dry spot vanilla treats it as not rained on
+ * (fire, farmland, cauldrons, lightning, blazes), and on the client the rain fades where the camera stands in one.
  */
 @Mixin(Level.class)
 public abstract class LevelMixin {

@@ -12,10 +12,10 @@ hud on
 wait 10
 shot warning
 /storm clear
-# the test world is ocean here: dry ground around where the storm will stand
-/fill ~-100 63 ~40 ~100 63 ~140 minecraft:stone
+# the test world is ocean here: dry ground around where the storm will stand, filled from its middle (the nearest chunks load first)
 /tp @s ~ ~ ~120
 wait 60
+/fill ~-100 63 ~-80 ~100 63 ~20 minecraft:stone
 /fill ~-100 63 ~21 ~100 63 ~120 minecraft:stone
 /tp @s ~ ~ ~-120
 wait 20

@@ -28,6 +28,6 @@ public abstract class FogRendererMixin {
         float far = ClientEffects.fogDistance(RenderSystem.getShaderFogEnd());
         if (far >= RenderSystem.getShaderFogEnd() - .5f) return;
         RenderSystem.setShaderFogEnd(far);
-        RenderSystem.setShaderFogStart(Math.min(RenderSystem.getShaderFogStart(), far * .15f));
+        RenderSystem.setShaderFogStart(ClientEffects.fogStart(RenderSystem.getShaderFogStart(), far));
     }
 }

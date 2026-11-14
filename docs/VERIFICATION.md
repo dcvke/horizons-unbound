@@ -1,5 +1,21 @@
 # Verification snapshots
 
+## Version 1.0.1 — 2026-11-14
+
+1.0.1 fixes cutscene shots that reached past the loaded world, glowing arcs seen through distant hills, storms announced over unloaded chunks starting at the bottom of the world, storm creatures that never left, rain killing a Fire Twister's blazes and End echoes bypassing Sodium's fast rendering path. Both branches were rebuilt:
+
+| Build | GameTests | Scripted scenarios | Ordinary dedicated server |
+|---|---|---|---|
+| NeoForge 1.21.1 | 4/4 | 15/15 | Startup, spawn/info/clear commands and clean shutdown passed |
+| Fabric 1.21.1 | 4/4 | 15/15 (production jar) | Not repeated for 1.0.1 |
+| Forge 1.20.1 | 5/5 | 15/15 | Startup, spawn/info/clear commands and clean shutdown passed |
+| Fabric 1.20.1 | 5/5 | 15/15 (production jar) | Not repeated for 1.0.1 |
+
+The eleven earlier scenarios gained four: far cutscene shots inside the loaded world (`edge`, also run at render distance 6), arcs behind near, mid-distance and far blocks (`occlusion`), End echoes (`echo`) and a Nether storm's creatures arriving and leaving with it (`mobs`). After the final change, keeping the rain off round Fire Twisters, the full set was repeated on NeoForge 1.21.1 and the creature scenario twice on each other build.
+
+On NeoForge 1.21.1 a player avatar from Figura and the arcs were also checked with a typical client pack: Sodium, Iris without a shader pack, Figura, Entity Culling, ImmediatelyFast, Entity Model Features, Entity Texture Features, 3D Skin Layers, Better Third Person and BadOptimizations. The avatar is drawn whole in every cutscene shot.
+
+Not checked for 1.0.1: Iris or Oculus with a shader pack enabled, Distant Horizons during a cutscene, two real players and a real microphone.
 ## Release preparation — 2026-11-14
 
 Horizons Unbound 1.0.0 was rebuilt on both source branches before the first GitHub releases. These checks were repeated for this publication:

@@ -50,7 +50,7 @@ public final class ForgeClient {
         float far = ClientEffects.fogDistance(e.getFarPlaneDistance());
         if (far >= e.getFarPlaneDistance() - .5f) return;
         e.setFarPlaneDistance(far);
-        e.setNearPlaneDistance(Math.min(e.getNearPlaneDistance(), far * .15f));
+        e.setNearPlaneDistance(ClientEffects.fogStart(e.getNearPlaneDistance(), far));
         e.setCanceled(true);
     }
     @SubscribeEvent public static void fov(ViewportEvent.ComputeFov e) { e.setFOV(Cutscene.onFov(e.getFOV(), (float) e.getPartialTick())); }
