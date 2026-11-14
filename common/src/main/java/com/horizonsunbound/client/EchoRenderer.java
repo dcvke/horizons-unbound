@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -18,12 +19,17 @@ import java.util.UUID;
 /** Draws an echo as its player, with their skin, as a violet-tinted see-through ghost. */
 public class EchoRenderer extends LivingEntityRenderer<EchoEntity, PlayerModel<EchoEntity>> {
     public EchoRenderer(EntityRendererProvider.Context ctx) {
-        super(ctx, new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER), false) {
-            @Override // violet-tinted and about half see-through, whatever color the renderer asks for
-            public void renderToBuffer(PoseStack pose, VertexConsumer vc, int light, int overlay, float r, float g, float b, float a) {
-                super.renderToBuffer(pose, vc, light, overlay, r * 190 / 255f, g * 160 / 255f, b, a * 120 / 255f);
-            }
-        }, 0);
+        super(ctx, new EchoModel(ctx.bakeLayer(ModelLayers.PLAYER)), 0);
+    }
+
+    // An explicit constructor avoids javac deriving duplicate parameter names from the patched Forge model.
+    private static final class EchoModel extends PlayerModel<EchoEntity> {
+        private EchoModel(ModelPart root) { super(root, false); }
+
+        @Override // violet-tinted and about half see-through, whatever color the renderer asks for
+        public void renderToBuffer(PoseStack pose, VertexConsumer vc, int light, int overlay, float r, float g, float b, float a) {
+            super.renderToBuffer(pose, vc, light, overlay, r * 190 / 255f, g * 160 / 255f, b, a * 120 / 255f);
+        }
     }
 
     @Override
