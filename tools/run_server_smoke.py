@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import struct
 import subprocess
@@ -14,6 +15,7 @@ def main():
     parser.add_argument('--loader', choices=['neoforge', 'forge', 'fabric'], required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--gradle-arg', action='append', default=[])
+    parser.add_argument('--mods', type=Path, help='Other mods to run beside it (their jars)')
     args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
     directory = args.output.resolve()
@@ -23,6 +25,11 @@ def main():
         rcon_port = reservation.getsockname()[1]
     password = 'horizons-unbound-local-test'
     (directory / 'eula.txt').write_text('eula=true\n')
+    if args.mods:
+        if args.loader == 'fabric': args.gradle_arg.append('-PcompatModsDirectory=' + str(args.mods.resolve()))
+        else:
+            (directory / 'mods').mkdir()
+            for mod in args.mods.glob('*.jar'): shutil.copy2(mod, directory / 'mods' / mod.name)
     (directory / 'server.properties').write_text(f'server-ip=127.0.0.1\nserver-port=0\nonline-mode=false\nenable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\nlevel-seed=1234\nview-distance=3\nsimulation-distance=3\nspawn-protection=0\n')
     command = [str(root / ('gradlew.bat' if os.name == 'nt' else 'gradlew')), ':' + args.loader + ':runServer', '--console=plain', '--no-configuration-cache', '-PserverDirectory=' + str(directory), *args.gradle_arg]
     ready = threading.Event()

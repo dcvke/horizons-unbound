@@ -13,6 +13,8 @@ On Fabric, install the matching Forge Config API Port and optionally Mod Menu to
 | `config/horizons_unbound-common.toml` | the world / the server | how often storms come, which kinds, cutscenes for everyone, what storms may change, land claims, biomes without storms |
 | `config/horizons_unbound-client.toml` | each player | storm view distance, my cutscenes, storm volume, shader pack mode |
 
+The common file also sets: the dimensions storms come to on their own (`dimensions`), how long they last (`stormMinutes`), how fast they drift (`speed`), their size (`minDiameter`, `maxDiameter`), the warning players get when one gathers (`warnings`), and storm creatures (section `mobs`): whether storms bring creatures of their dimension, how often, how many at once, whether they leave with the storm, and which entity ids each kind brings (any mod's; the Deep Dark brings none by default).
+
 On a server only the server's common file counts for the world; each player keeps their own client file.
 
 ## Data pack tags
@@ -32,6 +34,18 @@ Add your mod's ground to `reshapable`, and anything precious to `storm_proof`:
 Use `tags/blocks/` instead of `tags/block/` in Minecraft 1.20.1 data packs. That version also uses `loot_tables/` and `structures/` instead of the singular 1.21.1 folder names.
 
 Storms also never change blocks players placed or blocks near the world spawn and beds (`protectRadius`). With `respectClaims` on, a fake player named `[Horizons Unbound storm]` requests break permission. NeoForge and Forge post their native `BlockEvent.BreakEvent`; Fabric invokes `PlayerBlockBreakEvents.BEFORE` and, when installed, Common Protection API. Protection therefore depends on the claim mod handling that loader's hook. Claim mods which bypass those hooks need an integration; installing a claim mod alone is not a guarantee.
+
+## Advancements
+
+`horizons_unbound:root` (see a storm), `seen_overworld`, `seen_nether`, `seen_end`, `seen_deep_dark`, `all_kinds`, `grand` (the great storm), `eye` (stand inside a column), `tempered` (gear tempered nearby) and `heard` (a Deep Dark storm heard you). They use the `minecraft:impossible` trigger and are granted by the mod, with cutscenes on or off, so quest mods (FTB Quests and the like) can use them as tasks. A data pack may replace or remove them.
+
+## Accessibility
+
+The game's own settings apply: "Hide Lightning Flashes" turns the storms' flashes and flicker (lightning in the cloud cap, the birth's flash, the cutscene's screen flash, crossing a wall) into a soft, steady glow; "Distortion Effects" scales the cutscene camera's shakes, sway and banking, down to none.
+
+## Languages
+
+English, Russian, Spanish (also for Mexico and Argentina), Portuguese (Brazil, also Portugal), French (also Canada), German, Chinese (Simplified), Japanese, Korean, Polish, Turkish and Ukrainian: every cutscene line, name, advancement, warning and setting. Settings' tooltips are in English and Russian. In Chinese and Japanese the cutscene lines wrap by character.
 
 ## Resource packs
 
@@ -56,15 +70,15 @@ For local development, put the binary jar in your addon's `libs/` and add the ap
 
 ```groovy
 // NeoForge with ModDevGradle
-dependencies { implementation files('libs/horizons_unbound-neoforge-1.21.1-0.2.0.jar') }
+dependencies { implementation files('libs/horizons_unbound-neoforge-1.21.1-1.0.0.jar') }
 // Forge with ModDevGradle legacyforge: use module coordinates to remap SRG names
 repositories { flatDir { dirs 'libs' } }
-dependencies { modImplementation group: 'local.mods', name: 'horizons_unbound-forge-1.20.1-0.2.0', version: 'local' }
+dependencies { modImplementation group: 'local.mods', name: 'horizons_unbound-forge-1.20.1-1.0.0', version: 'local' }
 // Fabric with Loom: use modImplementation so Loom remaps the production jar
-dependencies { modImplementation files('libs/horizons_unbound-fabric-1.21.1-0.2.0.jar') }
+dependencies { modImplementation files('libs/horizons_unbound-fabric-1.21.1-1.0.0.jar') }
 ```
 
-Use `horizons_unbound-forge-1.20.1-0.2.0.jar` or the Fabric 1.20.1 jar on that version. Declare Horizons Unbound as a required dependency in your loader metadata if your addon directly references its classes.
+Use `horizons_unbound-forge-1.20.1-1.0.0.jar` or the Fabric 1.20.1 jar on that version. Declare Horizons Unbound as a required dependency in your loader metadata if your addon directly references its classes.
 
 ### Events
 
@@ -122,6 +136,8 @@ storm's effects stop (the storm stays in the sky), so one broken addon never cra
 - `HorizonsUnboundApi.storms(level)`: the storms that have risen in a level.
 - `HorizonsUnboundApi.spawn(level, kind, pos, diameter, omens)`: brings a storm; null if a listener cancelled it.
 
+All API calls that read or change a world must run on its server thread. `storms(level)` is an unmodifiable live view, not a snapshot; its `Storm` objects are live and should be treated as read-only. With `omens=true`, `spawn` posts the cancellable announce event and returns null when cancelled. With `omens=false`, it immediately adds the storm and posts Born without an announce event. Diameters are clamped to 100–200 blocks. Addons must target the matching Minecraft version even though the API entry points are shared.
+
 ## KubeJS
 
 KubeJS is supported through native events on NeoForge and Forge. These examples are not Fabric entry points.
@@ -160,4 +176,9 @@ Restart the game/server after changing startup scripts. The binding and class-st
 - **Distant Horizons**: storms are seen from at least 64 chunks away when "Storm view distance" is 0.
 - **Fabric 1.20.1 shader versions**: the tested stable pair is Iris 1.7.5 with Sodium 0.5.11. Iris 1.7.6's [required Sodium version](https://api.modrinth.com/v2/version/s5eFLITc) is the 0.5.12 beta; mixing it with stable Sodium 0.5.11 fails before a world loads.
 - **Cloud mods**: under a storm's sky the vanilla cloud invocation is skipped and the storm draws its own cloud cap. A cloud mod which uses a separate render path may need its own integration. Weather replacements may suppress vanilla thunder and rain.
+- **Figura**: while a cutscene films the player from outside, the game reports a third-person camera, so avatars that hide parts of themselves in first person are drawn whole and follow the cutscene's acting. Tested with Figura 0.1.6.
+- **JourneyMap, Xaero's Minimap and World Map**: risen storms appear on the minimap and the full map as a circle in their kind's color, named on hover (JourneyMap, Xaero's World Map). Xaero has no public map API: the storms use the same chunk highlights as land claims, and if a Xaero update changes that code they simply stop showing there. Xaero's Minimap alone may take several seconds to wipe a storm that died or moved on. Tested with JourneyMap 6.0.7/6.0.9, Xaero's Minimap 26.6.0 and World Map 1.47.0.
+- **Simple Voice Chat**: a Deep Dark storm hears players talking inside it, the same as their steps; whispering is not heard, like sneaking. Only voices of players inside such a storm are decoded. Tested with Simple Voice Chat 2.6.27 (plugin API 2.5.0).
+- **Other mods' blocks**: storms only change natural ground (`reshapable`, including modded sand and gravel in the common `c`/`forge` tags) and loose plants, snow and ice, so graves, waystones and machines are never touched.
+- **Player size (Pehkui, Origins, the scale attribute)**: the cutscene's close shots are scaled to the player's height.
 - **Dedicated servers**: each loader has ordinary server smoke tests as well as GameTests; no rendering classes are required on a server.

@@ -1,21 +1,241 @@
-MIT License
+FOGMARE MOD LICENSE v1.0
 
-Copyright (c) 2026 dcvke
+Copyright (c) 2026 Fogmare Motions. All rights reserved, except for what this
+license lets you do.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+SPDX identifier: LicenseRef-Fogmare-Mod-License-1.0
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Hi! We are Fogmare Motions, a small studio that makes Minecraft mods. We want
+people to have fun with our mods, build on them and make cool stuff for them.
+We just don't want our work copied, resold, or turned into someone else's
+project without us knowing. This license tries to say exactly that, in plain
+words.
+
+
+THE SHORT VERSION
+
+This part is a friendly summary. The numbered sections below are the actual
+rules.
+
+You can, without asking us:
+
+- Play the mod, record it, stream it, and earn money from your videos.
+- Run it on any server, including servers with donations.
+- Put it in free modpacks, as long as the mod is downloaded from its official
+  page.
+- Make resource packs, data packs, shader tweaks, translations, configs,
+  scripts and addons for it, and share them however you like.
+- Read the source code, learn from it, and send us fixes.
+
+You need our permission to:
+
+- Put the mod in anything paid, paywalled or exclusive.
+- Re-upload the mod anywhere else.
+- Release your own edited version, fork or rewrite of it.
+- Port it to Bedrock Edition, another game, or a loader or version we don't
+  support.
+- Copy our code, textures, sounds or other files into your own project.
+
+When in doubt, just ask. We usually answer.
+
+
+1. WHAT THIS LICENSE COVERS
+
+1.1. "The Mod" means the Minecraft mod this license file comes with: its source
+code, compiled files (jar), textures, icons, models, sounds, shaders,
+animations, cutscenes, written text and dialogue, translations we made, and its
+name and logo.
+
+1.2. "We", "us" and "the Studio" mean Fogmare Motions (also called Fogmare),
+the creator and copyright holder of the Mod.
+
+1.3. "You" means anyone who downloads, uses, or does anything with the Mod.
+
+1.4. This license applies to every version of the Mod that is released with
+this file. Older versions that were released under a different license stay
+under that license.
+
+1.5. Anything not clearly allowed in this license is not allowed without our
+written permission.
+
+
+2. USING THE MOD
+
+2.1. You may download, install and play the Mod for free, in single player or
+multiplayer.
+
+2.2. You may install the Mod on any server, public or private, including
+servers that accept donations or sell ranks, as long as you do not charge
+people for access to the Mod itself or lock its features behind a payment.
+
+2.3. You may make videos, streams, screenshots, reviews, guides and wiki pages
+about the Mod, and you may monetize them. A link to the Mod's official page is
+appreciated, but not required.
+
+
+3. MODPACKS
+
+3.1. You may include the Mod in any free modpack without asking us, as long as:
+
+- the Mod is downloaded from its official page (Modrinth or CurseForge), for
+  example through the platform's normal modpack system;
+- you do not change the Mod's jar file (changing its config files is fine);
+- you do not claim the Mod as your own.
+
+3.2. Rewards that Modrinth or CurseForge pay to modpack authors do not make a
+modpack "paid". A pack that is free to download on those platforms counts as
+free.
+
+3.3. You need our written permission to include the Mod in:
+
+- a modpack that costs money, or that is only available to paying people
+  (Patreon, Boosty, early access, donor-only, and so on);
+- a modpack or launcher that ships the Mod's jar file itself instead of
+  downloading it from the official page;
+- any product, service or server package that you sell.
+
+
+4. MAKING THINGS FOR THE MOD
+
+4.1. You may create and share, under any license you like, and without asking
+us:
+
+- resource packs that change the Mod's textures, models, sounds, text,
+  dialogue or translations;
+- data packs, tags, configs and presets;
+- scripts for scripting mods (such as KubeJS);
+- content packs made for the Mod's own features (for example skin packs,
+  scenario packs or custom cutscene lines);
+- translations into other languages;
+- shader packs or shader settings that support the Mod;
+- addons and compatibility mods that work with the Mod through its public API,
+  events, or other mod-loading tools (for example mixins).
+
+4.2. These are your own creations, with a few simple rules:
+
+- they must not contain the Mod's code, jar, or original files, except where
+  you replace them with your own versions or need a tiny piece just to connect
+  to the API;
+- they must require players to get the Mod separately, from its official page;
+- they must not look like official parts of the Mod. A name like "Something
+  Addon for (Mod name)" is fine. Using our logo or pretending we made it is
+  not.
+
+4.3. Using the Mod's public API is always free and does not require permission,
+including for addons you plan to sell. Selling an addon still must not mean
+selling or paywalling the Mod itself.
+
+
+5. THE SOURCE CODE
+
+5.1. You may read the Mod's source code, learn from it, and talk about it.
+
+5.2. You may fork the repository on GitHub, or decompile the Mod, only to:
+
+- study how it works;
+- find bugs and fix compatibility problems;
+- prepare changes that you send back to us (pull requests).
+
+5.3. You may change the Mod for your own private use. You may not share those
+changed versions with others without our permission.
+
+5.4. Learning from our code is fine. Copying it into your own project is not,
+unless we say yes.
+
+
+6. WHAT NEEDS OUR WRITTEN PERMISSION
+
+Without our written permission, you may not:
+
+6.1. Sell the Mod, or put it in any paid, paywalled or exclusive product,
+modpack or service (see section 3.3).
+
+6.2. Re-upload or mirror the Mod or its files on any website, launcher or
+storage other than its official pages.
+
+6.3. Release a modified version of the Mod, a fork, a "fixed" or "optimized"
+build, or a rewrite of it for your own modpack or project.
+
+6.4. Port the Mod to Minecraft: Bedrock Edition, any other game, or any mod
+loader or Minecraft version that we don't officially support. This includes
+ports made using the Mod's code, assets or name, and projects presented as a
+version, port or remake of the Mod.
+
+6.5. Reuse the Mod's code, textures, icons, models, sounds, animations,
+cutscenes or text in another project.
+
+6.6. Use the Mod's name, the Studio's name or their logos to promote your own
+product, or in a way that makes people think we made or support it.
+
+6.7. Claim the Mod, or any part of it, as your own work.
+
+
+7. ASKING FOR PERMISSION
+
+7.1. Permission only counts if we give it to you in writing. A message from
+Fogmare Motions on Discord or by email is enough.
+
+7.2. Permission is given only to the person or team we gave it to, only for
+what we agreed to, and can come with conditions. You can't pass it on to
+someone else.
+
+7.3. We are allowed to say no.
+
+
+8. IF YOU SEND US CONTRIBUTIONS
+
+8.1. If you send us code, art, translations, fixes or other changes (for
+example a pull request), you still own your work, but you give Fogmare Motions
+a permanent, free, worldwide right to use, change, include and distribute it as
+part of the Mod or our other projects, under any license, including
+commercially.
+
+8.2. By sending a contribution, you confirm that it is your own work, or that
+you have the right to give it to us.
+
+
+9. THINGS THAT ARE NOT OURS
+
+9.1. Minecraft is owned by Mojang Studios and Microsoft. The Mod is not an
+official Minecraft product and is not approved by or associated with Mojang or
+Microsoft. Your use of Minecraft is also covered by Mojang's own terms.
+
+9.2. Libraries and mods that the Mod depends on keep their own licenses.
+
+9.3. Skins, textures, packs and other files that players create or load into
+the Mod belong to whoever made them. This license does not cover them.
+
+
+10. BREAKING THE RULES
+
+10.1. If you break this license, your permissions under it end automatically.
+
+10.2. If you fix the problem within 30 days after we tell you about it, your
+permissions come back, unless you have broken the license before.
+
+10.3. We may ask websites and platforms to remove content that breaks this
+license.
+
+
+11. NO WARRANTY
+
+The Mod is provided "as is", without any warranty. We are not responsible for
+any damage, lost worlds, crashes or other problems caused by using it. Back up
+your worlds.
+
+
+12. OTHER THINGS
+
+12.1. We may change this license for future versions of the Mod. Each version
+is covered by the license it was released with.
+
+12.2. If any part of this license can't be enforced where you live, the rest
+of it still applies.
+
+12.3. The short version at the top is only a summary. If it and the numbered
+sections ever disagree, the numbered sections win.
+
+Thanks for reading this far. Have fun with the mod!
+
+Fogmare Motions

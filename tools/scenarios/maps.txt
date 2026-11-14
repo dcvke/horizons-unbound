@@ -1,0 +1,23 @@
+# Storms on map mods (JourneyMap, Xaero's): the minimap with the storm's circle, from its edge and from afar, then gone once cleared.
+/storm clear
+/time set 6000
+/gamemode creative
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~ ~ 0 0
+wait 20
+/storm spawn nether 100
+wait 900
+hud on
+/tp @s ~ ~ ~85 0 0
+wait 100
+shot map_edge
+/tp @s ~ ~ ~-60 0 0
+wait 100
+shot map_off
+/tp @s ~ ~ ~60 0 0
+/storm clear
+wait 100
+shot map_cleared
+wait 200
+shot map_cleared_later

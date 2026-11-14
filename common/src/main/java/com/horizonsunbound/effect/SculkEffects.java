@@ -28,14 +28,30 @@ public final class SculkEffects {
 
     private SculkEffects() {}
 
+    /**
+     * Players inside a Deep Dark storm just now (UUID to System.currentTimeMillis()), for the voice chat listener,
+     * which runs on its own thread and must not walk the storm list.
+     */
+    public static final java.util.Map<java.util.UUID, Long> LISTENED_TO = new java.util.concurrent.ConcurrentHashMap<>();
+
     static void tick(ServerLevel level, StormManager m, Storm s, List<ServerPlayer> near) {
         if (s.age % 10 == 0 && s.marks.removeIf(k -> k.kind() == Storm.Mark.PULSE && s.age - k.a() > HEARD_FOR)) m.resync();
+        if (s.age % 10 == 0) {
+            long now = System.currentTimeMillis();
+            for (ServerPlayer p : near) if (!p.isSpectator() && s.inside(p.getX(), p.getY(), p.getZ())) LISTENED_TO.put(p.getUUID(), now);
+        }
     }
 
     public static void onGameEvent(ServerLevel level, net.minecraft.world.entity.Entity cause, net.minecraft.world.level.gameevent.GameEvent event) {
         if (!(cause instanceof ServerPlayer p) || p.isSpectator()) return;
         if (!event.is(GameEventTags.VIBRATIONS)) return;
         if (p.isSteppingCarefully() && event.is(GameEventTags.IGNORE_VIBRATIONS_SNEAKING)) return;
+        hear(level, p);
+    }
+
+    /** A noise from player p (a step, a hit, their voice): a Deep Dark storm they are inside answers it. */
+    public static void hear(ServerLevel level, ServerPlayer p) {
+        if (p.isSpectator()) return;
         StormManager m = StormManager.get(level);
         Storm s = null;
         for (Storm st : m.storms()) if (st.has(StormType.DEEP_DARK) && st.inside(p.getX(), p.getY(), p.getZ())) s = st;
@@ -46,6 +62,7 @@ public final class SculkEffects {
         d.putLong("ds_heard", now + 10);
         s.marks.add(new Storm.Mark(Storm.Mark.PULSE, p.getBlockX(), p.getBlockY() + 1, p.getBlockZ(), s.age));
         m.resync();
+        com.horizonsunbound.StormAdvancements.award(p, "heard", "heard");
         // patience: noises counted within a 10 second window
         int count = now - d.getLong("ds_noise_since") > 200 ? 1 : d.getInt("ds_noise") + 1;
         if (count == 1) d.putLong("ds_noise_since", now);

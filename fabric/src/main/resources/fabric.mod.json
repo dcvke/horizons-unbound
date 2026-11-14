@@ -3,9 +3,10 @@
   "id": "${mod_id}",
   "version": "${mod_version}",
   "name": "${mod_name}",
-  "description": "Huge dimensional storms with their own skies, worlds and stories.",
+  "description": "Huge dimensional storms roll across your world, bringing pieces of the End, the Nether, the Overworld and the Deep Dark with them.",
+  "icon": "horizons_unbound.png",
   "authors": [
-    "dcvke"
+    "Fogmare Motions"
   ],
   "license": "${mod_license}",
   "environment": "*",
@@ -21,6 +22,12 @@
     ],
     "modmenu": [
       "com.horizonsunbound.fabric.ModMenuIntegration"
+    ],
+    "journeymap": [
+      "com.horizonsunbound.compat.JourneyMapMarks"
+    ],
+    "voicechat": [
+      "com.horizonsunbound.compat.VoiceHearing"
     ]
   },
   "mixins": [

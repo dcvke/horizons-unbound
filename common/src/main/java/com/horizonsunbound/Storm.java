@@ -56,7 +56,7 @@ public final class Storm {
     int cue = -1;                 // server: ticks until it rises with its cutscene (StormCutscenes), -1 = not yet seen
     int held;                     // server: ticks it has waited, omens up, for someone to come and see it
     private float heading;        // server only from here on
-    private int life = LIFE;
+    private int life = StormsConfig.or(() -> StormsConfig.STORM_MINUTES.get() * 60 * 20, LIFE);
     private double ground;
 
     public Storm(UUID id, StormType type, int diameter, double x, double y, double z) {
@@ -171,8 +171,9 @@ public final class Storm {
             int g = groundUnder(level, x, z, radius(), false);
             if (g != NO_GROUND) ground = g;
         }
-        vx = (float) (Mth.cos(heading) * SPEED);
-        vz = (float) (Mth.sin(heading) * SPEED);
+        double speed = SPEED * StormsConfig.or(StormsConfig.SPEED::get, 1.0);
+        vx = (float) (Mth.cos(heading) * speed);
+        vz = (float) (Mth.sin(heading) * speed);
         vy = (float) Mth.clamp(ground - y, -.05, .05); // follow the terrain without jumps
         step();
         return true;

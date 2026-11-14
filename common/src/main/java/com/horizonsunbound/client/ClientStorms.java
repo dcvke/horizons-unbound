@@ -69,6 +69,7 @@ public final class ClientStorms {
         if (mc.level == null || mc.isPaused()) return;
         for (Storm s : STORMS.values()) s.clientStep();
         for (Storm o : OMENS.values()) if (o.omen > 1) o.omen--;
+        com.horizonsunbound.compat.MapMarks.tick();
     }
 
     public static void onLogout() {

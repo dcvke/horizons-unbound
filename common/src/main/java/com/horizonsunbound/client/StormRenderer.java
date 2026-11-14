@@ -257,15 +257,15 @@ public final class StormRenderer {
             birth(fx);
             end(fx, fxType);
         }
-        // The arcs inside the cloud cap shine through the cloud itself (from above and from the side too); only the
-        // column hides the far ones (front()). They hang hundreds of blocks up, where no terrain stands in front.
-        RenderType arcGlow = Types.through(GLOW), arcCore = Types.through(BAND);
-        BufferBuilder arcs = begin(arcGlow);
+        // The arcs inside the cloud cap shine through the cloud itself (from above and from the side too), but not
+        // through blocks: depth-tested, pulled halfway to the camera so the cap's sheet can't hide them (arcs()).
+        // Only the column hides the far ones (front()).
+        BufferBuilder arcs = begin(glowType);
         arcs(arcs, false);
-        end(arcs, arcGlow);
-        arcs = begin(arcCore);
+        end(arcs, glowType);
+        arcs = begin(coreType);
         arcs(arcs, true);
-        end(arcs, arcCore);
+        end(arcs, coreType);
     }
 
     static RenderType glowType() { return Types.glow(GLOW); }
@@ -394,7 +394,7 @@ public final class StormRenderer {
                 sprite(vc, DOT, rad * Mth.cos(ang), y + r * .05f * Mth.sin(t + i), rad * Mth.sin(ang), 5 + 9 * rnd.nextFloat(), glow, k * .32f);
             }
         }
-        float flash = StormBirth.flash(t);
+        float flash = Accessibility.flash(StormBirth.flash(t));
         if (flash > 0) {
             flatFx(vc, DOT, 0, 1, 0, r * 5 * (1.2f - flash * .2f), glow, flash * .9f);
             sprite(vc, DOT, 0, r * .2f, 0, r * 1.6f, core, flash * .5f);
@@ -477,7 +477,7 @@ public final class StormRenderer {
     private void cloudLight(float flare) {
         if (type == StormType.DEEP_DARK) { // slow breathing, and a flash through the cloud when it hears something
             litR2 = Mth.square(r * CAP * .7f);
-            lit = .14f + .1f * Mth.sin(t * .8f) + .6f * heard;
+            lit = .14f + .1f * Mth.sin(t * .8f) + .6f * Accessibility.flash(heard);
             return;
         }
         if (type == StormType.NETHER) {
@@ -491,7 +491,8 @@ public final class StormRenderer {
         float dt = t - (k * period + (hash >>> 20 & 1023) / 1023f * (period - .5f));
         if (dt < 0 || dt > .4f) return;
         // a strike flickers: bright, dim, bright again, fading out
-        lit = dt < .07f ? 1 : dt < .14f ? .25f : dt < .21f ? .8f : (.4f - dt) / .19f * .5f;
+        lit = Accessibility.noFlashes() ? .25f * (1 - dt / .4f) // no flicker: the spot just glows up and fades
+                : dt < .07f ? 1 : dt < .14f ? .25f : dt < .21f ? .8f : (.4f - dt) / .19f * .5f;
         float ang = (hash >>> 32 & 1023) / 1023f * TAU, d = r * (TOP + (CAP - TOP) * .4f * (hash >>> 44 & 255) / 255f);
         litX = d * Mth.cos(ang);
         litZ = d * Mth.sin(ang);
@@ -748,13 +749,13 @@ public final class StormRenderer {
      */
     private void arcs(VertexConsumer vc, boolean core) {
         if (arcsIn * outside <= 0) return; // being born: not yet; from inside the column the wall hides them
-        pull = r * .06f;
+        pull = -.5f; // halfway to the camera: in front of the cloud sheet 4 blocks over them, behind roofs and hills near the camera
         RandomSource rnd = RandomSource.create(~seed);
         for (int k = 0; k < ARC_RINGS; k++) {
             StormType bt = storm.bandType(k);
             int color = core ? bt.core : bt.glow;
             float q = .05f + (k + rnd.nextFloat() * .5f) * .85f / ARC_RINGS, rad = capRadius(q);
-            float y = capHeight(q) - 4; // just under the cloud surface; drawn through it anyway (Types.THROUGH)
+            float y = capHeight(q) - 4; // just under the cloud surface; seen through it anyway (pull)
             float turn = frac(t * (.012f - .008f * q)) * TAU, halfW = (1.6f + rnd.nextFloat() * 1.4f) * (1 + q) * (core ? 1 : 2.8f);
             float fade = 1 - .6f * q, u0 = -frac(t * (.05f + rnd.nextFloat() * .05f) * (core ? 1 : .3f));
             int count = 2 + rnd.nextInt(3);
@@ -886,8 +887,8 @@ public final class StormRenderer {
             // wall (which writes depth and wobbles and flares around the bands) can't swallow it.
             float d = Mth.sqrt(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]);
             a *= .12f + .88f * smooth(d / (r * .25f)); // right by the camera a band is mist, not a wall of light
-            if (pull > 0 && a > 0) {
-                float f = d > pull * 2 ? 1 - pull / d : .5f;
+            if (pull != 0 && a > 0) { // pull < 0: that share of the distance instead
+                float f = pull < 0 ? 1 + pull : d > pull * 2 ? 1 - pull / d : .5f;
                 x[i] *= f;
                 y[i] *= f;
                 z[i] *= f;
@@ -930,12 +931,6 @@ public final class StormRenderer {
             RenderSystem.setShaderFogStart(Float.MAX_VALUE);
         }, () -> RenderSystem.setShaderFogStart(savedFogStart));
 
-        static final Function<ResourceLocation, RenderType> THROUGH = Util.memoize(tex -> create("horizons_unbound_glow_through",
-                DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 1536, false, false,
-                CompositeState.builder().setShaderState(RENDERTYPE_EYES_SHADER).setTextureState(new TextureStateShard(tex, false, false))
-                        .setTransparencyState(ADDITIVE_TRANSPARENCY).setCullState(NO_CULL).setWriteMaskState(COLOR_WRITE)
-                        .setDepthTestState(NO_DEPTH_TEST).setTexturingState(NO_FOG).createCompositeState(false)));
-
         /** For packs like Photon (forwardPack()): the plain textured shader, which they draw see-through and blend by alpha. */
         private static final ShaderStateShard POS_TEX_COLOR = new ShaderStateShard(net.minecraft.client.renderer.GameRenderer::getPositionTexColorShader);
         static final Function<ResourceLocation, RenderType> WALL_SH = Util.memoize(tex -> create("horizons_unbound_wall_sh",
@@ -944,15 +939,9 @@ public final class StormRenderer {
         static final Function<ResourceLocation, RenderType> GLOW_SH = Util.memoize(tex -> create("horizons_unbound_glow_sh",
                 DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS, 1536, false, false,
                 state(tex, POS_TEX_COLOR, ADDITIVE_TRANSPARENCY, COLOR_WRITE)));
-        static final Function<ResourceLocation, RenderType> THROUGH_SH = Util.memoize(tex -> create("horizons_unbound_glow_through_sh",
-                DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS, 1536, false, false,
-                CompositeState.builder().setShaderState(POS_TEX_COLOR).setTextureState(new TextureStateShard(tex, false, false))
-                        .setTransparencyState(ADDITIVE_TRANSPARENCY).setCullState(NO_CULL).setWriteMaskState(COLOR_WRITE).setOverlayState(OVERLAY)
-                        .setDepthTestState(NO_DEPTH_TEST).setTexturingState(NO_FOG).createCompositeState(false)));
 
         static RenderType wall(ResourceLocation tex) { return (forwardPack() ? WALL_SH : WALL).apply(tex); }
         static RenderType glow(ResourceLocation tex) { return forwardPack() ? GLOW_SH.apply(alphaGlow(tex)) : GLOW.apply(tex); }
-        static RenderType through(ResourceLocation tex) { return forwardPack() ? THROUGH_SH.apply(alphaGlow(tex)) : THROUGH.apply(tex); }
 
         /** The glow texture whose alpha follows its brightness (tools/make_alpha_glow.py): packs that blend by alpha keep black see-through. */
         private static final Function<ResourceLocation, ResourceLocation> ALPHA = Util.memoize(t -> t.withPath(t.getPath().replace(".png", "_a.png")));

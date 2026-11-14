@@ -1,0 +1,23 @@
+{
+  "parent": "horizons_unbound:seen_nether",
+  "display": {
+    "icon": {
+      "item": "minecraft:netherite_sword"
+    },
+    "title": {
+      "translate": "advancements.horizons_unbound.tempered.title"
+    },
+    "description": {
+      "translate": "advancements.horizons_unbound.tempered.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "tempered": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

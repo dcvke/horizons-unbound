@@ -15,6 +15,7 @@ repositories {
     maven { url = 'https://repo.spongepowered.org/repository/maven-public' }
     maven { url = 'https://maven.parchmentmc.org' }
     maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
+    maven { url = 'https://maven.maxhenkel.de/repository/public' }
 }
 configurations.apiElements.outgoing.capability("$group:$mod_id:$version")
 configurations.runtimeElements.outgoing.capability("$group:$mod_id:$version")
@@ -22,3 +23,10 @@ tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 tasks.withType(Jar).configureEach {
     from(rootProject.file('LICENSE'))
 }
+
+// Optional mods (compat package): Simple Voice Chat's published API, and compile-time stand-ins for JourneyMap's and
+// Xaero's classes (compat-stubs/). Neither is packaged: at run time the installed mod supplies the real classes.
+sourceSets { compatStubs { java.srcDir rootProject.file('compat-stubs') } }
+sourceSets.compatStubs.compileClasspath = configurations.compileClasspath
+sourceSets.main.compileClasspath += sourceSets.compatStubs.output
+dependencies { compileOnly 'de.maxhenkel.voicechat:voicechat-api:2.5.0' }

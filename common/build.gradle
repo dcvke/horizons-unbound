@@ -16,6 +16,7 @@ legacyForge {
 
 dependencies {
     compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
+    compileOnly 'org.ow2.asm:asm-tree:9.7' // the mixin plugin's interface mentions ASM; every loader brings its own
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
 }
 

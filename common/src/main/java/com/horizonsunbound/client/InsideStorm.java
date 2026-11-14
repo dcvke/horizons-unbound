@@ -395,7 +395,7 @@ public final class InsideStorm {
 
     public static void drawCrossing(net.minecraft.client.gui.GuiGraphics g) {
                 if (flash <= 0) return;
-                float a = flash * flash;
+                float a = Accessibility.flash(flash * flash);
                 RenderSystem.enableBlend();
                 RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
                 g.setColor((flashColor >> 16 & 255) / 255f * a, (flashColor >> 8 & 255) / 255f * a, (flashColor & 255) / 255f * a, 1);

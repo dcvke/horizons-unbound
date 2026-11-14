@@ -1,0 +1,23 @@
+{
+  "parent": "horizons_unbound:root",
+  "display": {
+    "icon": {
+      "item": "minecraft:sculk_shrieker"
+    },
+    "title": {
+      "translate": "advancements.horizons_unbound.seen_deep_dark.title"
+    },
+    "description": {
+      "translate": "advancements.horizons_unbound.seen_deep_dark.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "seen": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -146,6 +146,7 @@ public final class NetherEffects {
         stack.getOrCreateTagElement("display").put("Lore", lore);
         item.setItem(stack);
         level.sendParticles(ParticleTypes.LAVA, item.getX(), item.getY() + .3, item.getZ(), 12, .2, .2, .2, 0);
+        com.horizonsunbound.StormAdvancements.tempered(level, item.getX(), item.getY(), item.getZ());
         level.playSound(null, item.blockPosition(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1, .6f);
     }
 }

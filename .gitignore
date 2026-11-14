@@ -52,3 +52,25 @@ crash-reports/
 Thumbs.db
 __pycache__/
 *.pyc
+
+### Local compatibility downloads and assistant configuration ###
+/compat/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+PORTING_PROMPT.md
+.codex/
+.claude/
+.cursor/
+.junie/
+.continue/
+.specstory/
+.cursorrules
+.windsurfrules
+.aider*
+.mcp.json
+.github/copilot-instructions.md
+graphify-out/
+.env
+.env.*
+!.env.example

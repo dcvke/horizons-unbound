@@ -58,6 +58,7 @@ public final class StormManager extends SavedData {
         if (!StormHooks.announce(level, storm)) return false;
         storm.omen = OMEN_TICKS;
         omens.add(storm);
+        if (StormsConfig.WARNINGS.get()) StormSpawner.warn(level, storm);
         setDirty();
         sync(level);
         return true;
@@ -97,6 +98,7 @@ public final class StormManager extends SavedData {
 
     public int clear(ServerLevel level) {
         int n = storms.size() + omens.size();
+        for (Storm s : storms) com.horizonsunbound.effect.StormMobs.leave(level, s);
         storms.clear();
         omens.clear();
         setDirty();
@@ -118,6 +120,7 @@ public final class StormManager extends SavedData {
         for (Storm s : m.storms) {
             if (s.life() != Storm.DEATH) continue;
             StormHooks.dying(level, s);
+            com.horizonsunbound.effect.StormMobs.leave(level, s);
             StormCutscenes.dying(level, s); // it starts to come apart
         }
         ended |= m.merge(level);

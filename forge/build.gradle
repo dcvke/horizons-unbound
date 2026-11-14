@@ -94,7 +94,8 @@ processResources {
     inputs.properties properties
     filesMatching('META-INF/mods.toml') { expand properties }
     doLast {
-        fileTree(destinationDir).matching { include '*.mixins.json' }.each { config ->
+        // plain File API: fileTree() from doLast breaks the configuration cache on clean builds
+        destinationDir.listFiles().findAll { it.name.endsWith('.mixins.json') }.each { config ->
             def json = new groovy.json.JsonSlurper().parse(config)
             json.refmap = 'horizons_unbound.refmap.json'
             config.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
