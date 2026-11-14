@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
@@ -19,8 +18,15 @@ import java.util.UUID;
 /** Draws an echo as its player, with their skin, as a violet-tinted see-through ghost. */
 public class EchoRenderer extends LivingEntityRenderer<EchoEntity, PlayerModel<EchoEntity>> {
     public EchoRenderer(EntityRendererProvider.Context ctx) {
-        super(ctx, new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER), false), 0);
+        super(ctx, new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER), false) {
+            @Override // violet-tinted and about half see-through, whatever color the renderer asks for
+            public void renderToBuffer(PoseStack pose, VertexConsumer vc, int light, int overlay, int color) {
+                super.renderToBuffer(pose, vc, light, overlay, GHOST);
+            }
+        }, 0);
     }
+
+    private static final int GHOST = 120 << 24 | 190 << 16 | 160 << 8 | 255;
 
     @Override
     public ResourceLocation getTextureLocation(EchoEntity echo) {
@@ -28,11 +34,6 @@ public class EchoRenderer extends LivingEntityRenderer<EchoEntity, PlayerModel<E
         var connection = Minecraft.getInstance().getConnection();
         PlayerInfo info = id == null || connection == null ? null : connection.getPlayerInfo(id);
         return info != null ? info.getSkin().texture() : DefaultPlayerSkin.getDefaultTexture();
-    }
-
-    @Override
-    public void render(EchoEntity echo, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
-        super.render(echo, yaw, partial, pose, type -> new Ghost(buffers.getBuffer(type)), light);
     }
 
     @Override
@@ -47,14 +48,4 @@ public class EchoRenderer extends LivingEntityRenderer<EchoEntity, PlayerModel<E
     }
 
     @Override protected boolean shouldShowName(EchoEntity echo) { return false; }
-
-    /** Passes vertices through, tinting them violet and making them about half see-through. */
-    private record Ghost(VertexConsumer vc) implements VertexConsumer {
-        @Override public VertexConsumer addVertex(float x, float y, float z) { vc.addVertex(x, y, z); return this; }
-        @Override public VertexConsumer setColor(int r, int g, int b, int a) { vc.setColor(r * 190 / 255, g * 160 / 255, b, a * 120 / 255); return this; }
-        @Override public VertexConsumer setUv(float u, float v) { vc.setUv(u, v); return this; }
-        @Override public VertexConsumer setUv1(int u, int v) { vc.setUv1(u, v); return this; }
-        @Override public VertexConsumer setUv2(int u, int v) { vc.setUv2(u, v); return this; }
-        @Override public VertexConsumer setNormal(float x, float y, float z) { vc.setNormal(x, y, z); return this; }
-    }
 }

@@ -4,7 +4,7 @@
   "package": "com.horizonsunbound.mixin",
   "plugin": "com.horizonsunbound.mixin.CompatMixins",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["LevelMixin"],
+  "mixins": ["LevelMixin", "MobMixin"],
   "client": ["ClientLevelMixin", "ItemInHandRendererMixin", "LevelRendererMixin", "OptionsMixin", "PlayerModelMixin", "ToastComponentMixin"],
   "injectors": { "defaultRequire": 1 }
 }

@@ -70,15 +70,15 @@ For local development, put the binary jar in your addon's `libs/` and add the ap
 
 ```groovy
 // NeoForge with ModDevGradle
-dependencies { implementation files('libs/horizons_unbound-neoforge-1.21.1-1.0.0.jar') }
+dependencies { implementation files('libs/horizons_unbound-neoforge-1.21.1-1.0.1.jar') }
 // Forge with ModDevGradle legacyforge: use module coordinates to remap SRG names
 repositories { flatDir { dirs 'libs' } }
-dependencies { modImplementation group: 'local.mods', name: 'horizons_unbound-forge-1.20.1-1.0.0', version: 'local' }
+dependencies { modImplementation group: 'local.mods', name: 'horizons_unbound-forge-1.20.1-1.0.1', version: 'local' }
 // Fabric with Loom: use modImplementation so Loom remaps the production jar
-dependencies { modImplementation files('libs/horizons_unbound-fabric-1.21.1-1.0.0.jar') }
+dependencies { modImplementation files('libs/horizons_unbound-fabric-1.21.1-1.0.1.jar') }
 ```
 
-Use `horizons_unbound-forge-1.20.1-1.0.0.jar` or the Fabric 1.20.1 jar on that version. Declare Horizons Unbound as a required dependency in your loader metadata if your addon directly references its classes.
+Use `horizons_unbound-forge-1.20.1-1.0.1.jar` or the Fabric 1.20.1 jar on that version. Declare Horizons Unbound as a required dependency in your loader metadata if your addon directly references its classes.
 
 ### Events
 

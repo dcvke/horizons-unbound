@@ -50,7 +50,10 @@ public final class ClientEffects {
         for (Storm s : ClientStorms.all()) {
             if (!StormsConfig.effects(s.type)) continue;
             float w = 1 - smooth((float) (s.dist(cam.x, cam.z) - s.zone() * .8f) / (s.zone() * .2f));
-            if (s.type == StormType.NETHER) ashT = Math.max(ashT, w);
+            if (s.type == StormType.NETHER) { // ash instead of rain: its heat keeps the rain off (OverworldEffects.dryAt)
+                ashT = Math.max(ashT, w);
+                rainT = Math.min(rainT, 1 - w);
+            }
             if (s.type == StormType.OVERWORLD && w > 0) {
                 float wt = s.wetness(cam.x, cam.z);
                 rainT = Math.min(rainT, 1 - w * (1 - wt));
@@ -108,9 +111,13 @@ public final class ClientEffects {
     /** Ash air and the rain of wet pockets close the view in (the storm itself keeps its own haze). */
 
     public static float fogDistance(float far) {
+        far = Cutscene.fogLimit(far);
         if (ash < .01f && wet < .01f) return far;
         return Math.min(Mth.lerp(ash, far, Math.min(far, 40)), Mth.lerp(wet * .6f, far, Math.min(far, 64)));
     }
+
+    /** Where that closer fog starts: thick right away in ash and rain, a haze over the far half otherwise. */
+    public static float fogStart(float near, float far) { return Math.min(near, far * (ash < .01f && wet < .01f ? .5f : .15f)); }
 
     private static float smooth(float x) { x = Mth.clamp(x, 0, 1); return x * x * (3 - 2 * x); }
 }

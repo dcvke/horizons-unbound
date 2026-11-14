@@ -50,12 +50,13 @@ public final class OverworldEffects {
         if (s.age % 4 == 0) wind(level, s, near);
     }
 
-    /** True where an Overworld storm keeps the rain off (its dry pockets); vanilla rain logic asks this. */
+    /** True where a storm keeps the rain off (an Overworld storm's dry pockets, a Nether storm's heat); vanilla rain logic asks this. */
     public static boolean dryAt(Level level, BlockPos pos) {
         for (Storm s : StormEffects.storms(level)) {
-            if (s.type != StormType.OVERWORLD || !StormsConfig.OVERWORLD_EFFECTS.get()) continue;
             double x = pos.getX() + .5, z = pos.getZ() + .5;
-            if (s.dist(x, z) < s.zone() && s.wetness(x, z) < .5f) return true;
+            if (s.dist(x, z) >= s.zone()) continue;
+            if (s.type == StormType.NETHER) return true; // the thunder it brings would kill its own blazes
+            if (s.type == StormType.OVERWORLD && StormsConfig.OVERWORLD_EFFECTS.get() && s.wetness(x, z) < .5f) return true;
         }
         return false;
     }

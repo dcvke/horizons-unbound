@@ -202,7 +202,7 @@ public final class StormRenderer {
             float tx = (float) (Mth.lerp(partial, storm.xo, storm.x) - cam.x), ty = (float) (Mth.lerp(partial, storm.yo, storm.y) - cam.y);
             float tz = (float) (Mth.lerp(partial, storm.zo, storm.z) - cam.z), reach = storm.radius() * CAP;
             // drawn while any part of it is within the view distance, and only when it's on screen at all
-            if (Mth.sqrt(tx * tx + tz * tz) - reach > viewDistance) continue;
+            if (Mth.sqrt(tx * tx + tz * tz) - reach > viewDistance && !Cutscene.about(storm.id)) continue; // a cutscene's storm, however far
             if (!view.testAab(tx - reach, ty - SINK, tz - reach, tx + reach, ty + storm.radius() * HEIGHT + 10, tz + reach)) continue;
             if (FAILED.contains(storm.id)) continue;
             try {
@@ -256,7 +256,7 @@ public final class StormRenderer {
             end(fx, fxType);
         }
         // The arcs inside the cloud cap shine through the cloud itself (from above and from the side too), but not
-        // through blocks: depth-tested, pulled halfway to the camera so the cap's sheet can't hide them (arcs()).
+        // through blocks: depth-tested, pulled towards the camera so the cap's sheet can't hide them (arcs()).
         // Only the column hides the far ones (front()).
         BufferBuilder arcs = begin(glowType);
         arcs(arcs, false);
@@ -748,13 +748,15 @@ public final class StormRenderer {
      */
     private void arcs(VertexConsumer vc, boolean core) {
         if (arcsIn * outside <= 0) return; // being born: not yet; from inside the column the wall hides them
-        pull = -.5f; // halfway to the camera: in front of the cloud sheet 4 blocks over them, behind roofs and hills near the camera
         RandomSource rnd = RandomSource.create(~seed);
         for (int k = 0; k < ARC_RINGS; k++) {
             StormType bt = storm.bandType(k);
             int color = core ? bt.core : bt.glow;
             float q = .05f + (k + rnd.nextFloat() * .5f) * .85f / ARC_RINGS, rad = capRadius(q);
             float y = capHeight(q) - 4; // just under the cloud surface; seen through it anyway (pull)
+            // From below they're already this side of the cloud: a few blocks clear its wobble, and hills anywhere
+            // in between still hide them. From above, halfway to the camera, through the sheet.
+            pull = ty + y > 0 ? 8 : -.5f;
             float turn = frac(t * (.012f - .008f * q)) * TAU, halfW = (1.6f + rnd.nextFloat() * 1.4f) * (1 + q) * (core ? 1 : 2.8f);
             float fade = 1 - .6f * q, u0 = -frac(t * (.05f + rnd.nextFloat() * .05f) * (core ? 1 : .3f));
             int count = 2 + rnd.nextInt(3);

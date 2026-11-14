@@ -1,6 +1,7 @@
 package com.horizonsunbound.effect;
 
 import com.horizonsunbound.Storm;
+import com.horizonsunbound.StormManager;
 import com.horizonsunbound.StormType;
 import com.horizonsunbound.StormsConfig;
 import net.minecraft.core.BlockPos;
@@ -52,8 +53,7 @@ public final class StormMobs {
             if (StormEffects.nearHome(level, pos, StormsConfig.PROTECT_RADIUS.get())) continue;
             Entity e = type.spawn(level, pos, MobSpawnType.EVENT);
             if (e == null) continue;
-            e.addTag(TAG);
-            if (StormsConfig.MOBS_LEAVE.get() && e instanceof Mob mob) mob.setPersistenceRequired(); // they stay as long as the storm, then go with it
+            e.addTag(TAG); // they stay as long as the storm, then go with it (stays())
             level.sendParticles(ParticleTypes.REVERSE_PORTAL, e.getX(), e.getY() + 1, e.getZ(), 30, .4, .8, .4, .05);
             return;
         }
@@ -66,6 +66,21 @@ public final class StormMobs {
             level.sendParticles(ParticleTypes.REVERSE_PORTAL, m.getX(), m.getY() + 1, m.getZ(), 30, .4, .8, .4, .05);
             m.discard();
         }
+    }
+
+    /**
+     * Mob.checkDespawn (MobMixin), each tick: true keeps a storm's creature from the usual despawning while it is near
+     * a storm; away from every storm (its own came apart while it was off somewhere, or in an unloaded chunk) it goes.
+     */
+    public static boolean stays(ServerLevel level, Mob m) {
+        if (!m.getTags().contains(TAG) || !StormsConfig.MOBS_LEAVE.get() || level.getDifficulty() == Difficulty.PEACEFUL) return false;
+        for (Storm s : StormManager.get(level).storms()) {
+            double dx = m.getX() - s.x, dz = m.getZ() - s.z, r = s.zone() + 64;
+            if (dx * dx + dz * dz < r * r) return true;
+        }
+        level.sendParticles(ParticleTypes.REVERSE_PORTAL, m.getX(), m.getY() + 1, m.getZ(), 30, .4, .8, .4, .05);
+        m.discard();
+        return true;
     }
 
     private static List<Mob> mobs(ServerLevel level, Storm s) {

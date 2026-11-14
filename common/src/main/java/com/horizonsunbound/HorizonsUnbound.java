@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.UUID;
@@ -49,7 +50,8 @@ public class HorizonsUnbound {
         Vec3 dir = Vec3.directionFromRotation(0, src.getRotation().y);
         double dist = diameter / 2.0 + 80;
         int x = Mth.floor(src.getPosition().x + dir.x * dist), z = Mth.floor(src.getPosition().z + dir.z * dist);
-        int y = Storm.groundUnder(level, x + .5, z + .5, diameter / 2f, true);
+        int y = Storm.groundUnder(level, x + .5, z + .5, diameter / 2f, // nothing loaded out there: the ground where the caller is
+                level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mth.floor(src.getPosition().x), Mth.floor(src.getPosition().z)));
         Storm storm = new Storm(UUID.randomUUID(), type, diameter, x + .5, y, z + .5);
         if (omen) StormManager.get(level).announce(level, storm);
         else StormManager.get(level).add(level, storm);

@@ -169,7 +169,7 @@ public final class Storm {
         if (--life <= 0) return false;
         if (target == null) heading += (level.random.nextFloat() - .5f) * .02f;
         if (age % 20 == 0) { // once a second is plenty at this speed
-            int g = groundUnder(level, x, z, radius(), false);
+            int g = groundUnder(level, x, z, radius(), NO_GROUND);
             if (g != NO_GROUND) ground = g;
         }
         double speed = SPEED * StormsConfig.or(StormsConfig.SPEED::get, 1.0);
@@ -184,18 +184,18 @@ public final class Storm {
      * Lowest ground under the storm's whole foot: the center plus two rings out to its edge. Standing on the
      * center alone, a storm on a hilltop hangs in the air over the valley next to it; this way the column always
      * reaches the ground and simply sinks into higher terrain. Unloaded chunks are skipped rather than loaded
-     * (storms far from players still tick); NO_GROUND when nothing under it is loaded and loadCenter is false.
+     * (storms far from players still tick); orElse when nothing under it is loaded.
      */
-    static int groundUnder(ServerLevel level, double x, double z, float radius, boolean loadCenter) {
+    static int groundUnder(ServerLevel level, double x, double z, float radius, int orElse) {
         int low = NO_GROUND;
         for (int i = -1; i < 20; i++) {
             float ang = i * Mth.TWO_PI / (i < 8 ? 8 : 12), dist = i < 0 ? 0 : radius * (i < 8 ? .55f : 1);
             int bx = Mth.floor(x + Mth.cos(ang) * dist), bz = Mth.floor(z + Mth.sin(ang) * dist);
-            if (!(i < 0 && loadCenter) && !level.hasChunk(bx >> 4, bz >> 4)) continue;
+            if (!level.hasChunk(bx >> 4, bz >> 4)) continue; // an unloaded chunk reads as the bottom of the world
             int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz);
             low = low == NO_GROUND ? h : Math.min(low, h);
         }
-        return low;
+        return low == NO_GROUND ? orElse : low;
     }
 
     CompoundTag save() {
