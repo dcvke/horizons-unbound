@@ -34,6 +34,7 @@ public final class StormEffects {
     public static void tick(ServerLevel level, StormManager m, Storm s) {
         if (s.newborn()) return; // nothing happens to the world while the storm is being born
         if (StormsConfig.TRANSFORM_TERRAIN.get()) DimensionPieces.tick(level, m, s);
+        StormMobs.tick(level, s);
         if (!StormsConfig.effects(s.type)) return;
         List<ServerPlayer> near = playersIn(level, s, s.zone());
         // inside End and Nether columns players float (low gravity, updrafts): landing never hurts there

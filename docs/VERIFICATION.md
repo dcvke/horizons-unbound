@@ -1,4 +1,25 @@
-# Verification snapshot — 2026-11-13
+# Verification snapshots
+
+## Release preparation — 2026-11-14
+
+Horizons Unbound 1.0.0 was rebuilt on both source branches before the first GitHub releases. These checks were repeated for this publication:
+
+| Build | Gradle build | GameTests | Ordinary dedicated server |
+|---|---|---|---|
+| NeoForge 1.21.1 | Passed | 4/4 | Startup, spawn/info/clear commands and clean shutdown passed |
+| Fabric 1.21.1 | Passed | 4/4 | Startup, spawn/info/clear commands and clean shutdown passed |
+| Forge 1.20.1 | Passed | 5/5 | Startup, spawn/info/clear commands and clean shutdown passed |
+| Fabric 1.20.1 | Passed | 5/5 | Startup, spawn/info/clear commands and clean shutdown passed |
+
+The source comparison confirmed identical public API declarations, optional-mod integration implementations and compile-time stand-ins; common and client configuration definitions match after normalizing the config library API. All 42 shared asset/translation files match byte for byte or as parsed translation entries, allowing the additional 1.20.1 Client section label. All ten advancements match after adapting the icon field name. Other Java and data differences were reviewed as [Minecraft port requirements](PARITY.md).
+
+All four binary jars and all four source jars were inspected as ZIP archives. Each includes every shared source/class and resource expected for its branch, the final Fogmare Mod License 1.0 and no compile-time stand-ins. Mod classes target Java 21 on 1.21.1 and Java 17 on 1.20.1. Fabric binaries use remapped production names; Forge includes its refmap and nested MixinExtras dependency. Metadata versions and license identifiers were checked. Each Minecraft-version release includes a SHA-256 checksum file for its four jars.
+
+The supplied license was synchronized to both source branches and the jars, with the contact-placeholder clause removed and the remaining section 7 clauses renumbered at the author's request. Local test worlds, logs, downloaded compatibility mods, draft mod-page copy and assistant instructions are excluded from publication.
+
+The graphical and optional-mod checks below are earlier recorded checks, not a new rerun of every compatibility combination on this date. Their limits, including the absence of a two-real-player session and a real-microphone test, still apply.
+
+## Earlier verification — 2026-11-13
 
 Horizons Unbound 0.2.0 was checked on Windows with scripted clients, integrated worlds, ordinary dedicated servers and GameTest servers. Test inputs and captures remain local; third-party jars and shader packs are not part of this repository.
 
@@ -49,3 +70,22 @@ Paired captures were inspected for geometry, layers, camera motion, acting, titl
 Dedicated-server smoke tests cover startup, storm commands and clean shutdown. A separate-machine multiplayer session was not performed. Solas, other unlisted shader packs, combined DH-plus-shader sets, Fabric claim mods and NeoForge KubeJS scripts were not separately exercised. Native NeoForge KubeJS syntax was checked against its implementation; the Forge startup binding was exercised.
 
 Final binary/source jars were checked for Java targets, metadata, licenses, service providers, original assets, data resources, Fabric access wideners and Forge refmap/JarJar contents. `dist/` exports include SHA-256 checksums.
+
+## 1.0.0 checks
+
+The 1.0.0 additions were checked with scripted clients and GameTests on all four builds (development clients for NeoForge and Forge, the production loader for Fabric):
+
+| Check | Result |
+|---|---|
+| GameTests | NeoForge and Fabric 1.21.1: 4/4; Forge and Fabric 1.20.1: 5/5 |
+| Arcs under the cloud cap behind stone walls and a roof (`occlusion`) | hidden by blocks, still seen through the cloud |
+| Figura 0.1.6 avatar in the birth cutscene (`figura`) | drawn whole, follows the acting |
+| JourneyMap 6.0.7/6.0.9, Xaero's Minimap 26.6.0 and World Map 1.47.0 (`maps`) | circle shown, removed after the storm; Xaero's Minimap alone takes several seconds |
+| Simple Voice Chat 2.6.27 (`voice`, made-up frames) | plugin registered; loud speech inside a Deep Dark storm heard, quiet frames and speech outside not |
+| Advancements (`advancements`) | each kind, all kinds, the Great Storm and the eye granted |
+| Storm creatures and the gathering warning (`mobs`) | creatures appear on dry ground and leave with the storm; warning names the direction |
+| Hide Lightning Flashes, Distortion Effects 0 (`birth`) | flashes softened |
+| Player 2.5 times taller (`acting_big`, 1.21.1 scale attribute) | close shots keep the framing |
+| Chinese, Japanese, German cutscene lines (`phrases`) | shown and wrapped |
+
+Not checked here: two real players on one server at once, and a real microphone with Simple Voice Chat.

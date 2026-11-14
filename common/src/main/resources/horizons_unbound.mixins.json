@@ -2,8 +2,9 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.horizonsunbound.mixin",
+  "plugin": "com.horizonsunbound.mixin.CompatMixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": ["LevelMixin"],
-  "client": ["ClientLevelMixin", "ItemInHandRendererMixin", "LevelRendererMixin", "PlayerModelMixin", "ToastComponentMixin"],
+  "client": ["ClientLevelMixin", "ItemInHandRendererMixin", "LevelRendererMixin", "OptionsMixin", "PlayerModelMixin", "ToastComponentMixin"],
   "injectors": { "defaultRequire": 1 }
 }

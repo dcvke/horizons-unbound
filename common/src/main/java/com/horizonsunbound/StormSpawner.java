@@ -29,7 +29,7 @@ public final class StormSpawner {
      */
 
     public static void onLevelTick(ServerLevel level) {
-        if (level.dimension() != Level.OVERWORLD) return;
+        if (!StormsConfig.naturalIn(level.dimension())) return;
         if (level.getGameTime() % 20 != 0 || level.players().isEmpty()) return;
         StormManager m = StormManager.get(level);
         int interval = StormsConfig.SPAWN_INTERVAL.get() * 60; // seconds
@@ -62,7 +62,7 @@ public final class StormSpawner {
         if (players.isEmpty() || first.target != null || first.grand) return null;
         List<StormType> types = unlocked(players.get(level.random.nextInt(players.size())));
         if (types.size() > 1) types.remove(first.type);
-        int diameter = Mth.nextInt(level.random, Storm.MIN_DIAMETER, Storm.MAX_DIAMETER);
+        int diameter = StormsConfig.diameter(level.random);
         float r = diameter / 2f;
         for (int attempt = 0; attempt < 8; attempt++) {
             float ang = level.random.nextFloat() * Mth.TWO_PI, dist = (first.radius() + r) * 1.1f + 30;
@@ -84,7 +84,7 @@ public final class StormSpawner {
         ServerPlayer player = players.get(level.random.nextInt(players.size()));
         for (ServerPlayer p : players) if (StormCutscenes.finalePending(p)) player = p; // someone has met every kind: the great storm comes to them
         boolean grand = StormCutscenes.finalePending(player);
-        int diameter = grand ? Storm.MAX_DIAMETER : Mth.nextInt(level.random, Storm.MIN_DIAMETER, Storm.MAX_DIAMETER);
+        int diameter = grand ? Storm.MAX_DIAMETER : StormsConfig.diameter(level.random);
         float r = diameter / 2f;
         List<StormType> kinds = unlocked(player);
         if (kinds.isEmpty()) return null; // every kind turned off
@@ -124,6 +124,19 @@ public final class StormSpawner {
     private static boolean done(ServerPlayer player, String advancement) {
         AdvancementHolder a = player.server.getAdvancements().get(ResourceLocation.withDefaultNamespace(advancement));
         return a != null && player.getAdvancements().getOrStartProgress(a).isDone();
+    }
+
+    private static final String[] DIRECTIONS = {"east", "southeast", "south", "southwest", "west", "northwest", "north", "northeast"};
+
+    /** A storm gathers: players within a few hundred blocks are told where from (above their hotbar). */
+    static void warn(ServerLevel level, Storm storm) {
+        for (ServerPlayer p : level.players()) {
+            double dx = storm.x - p.getX(), dz = storm.z - p.getZ();
+            if (dx * dx + dz * dz > 600 * 600 || p.isSpectator()) continue;
+            int dir = Math.floorMod(Math.round((float) (Math.atan2(dz, dx) / (Math.PI / 4))), 8); // +x east, +z south
+            p.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.horizons_unbound.warning",
+                    net.minecraft.network.chat.Component.translatable("direction.horizons_unbound." + DIRECTIONS[dir])), true);
+        }
     }
 
     private static final String DEEP_DARK_SEEN = "horizons_unbound_deep_dark";

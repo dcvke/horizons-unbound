@@ -123,6 +123,7 @@ public final class Cutscene {
     private final ResourceKey<Level> dimension;
     private final Vec3 eye0, look0, base, seed;
     private final float h;
+    private final float size;               // the player's height in ordinary players (Pehkui, Origins): the close shots keep their framing
     private final Vec3[] kp, kl, mp, ml;  // key shots: where, looking at what, and the curve's tangents there
     private final byte[] kind;              // how each stretch between two shots goes
     private int ticks, lost, skipHold, fade = -1;
@@ -148,6 +149,7 @@ public final class Cutscene {
         base = new Vec3(s.x, s.y, s.z);
         seed = base.add(0, 2, 0);
         h = 3 * s.radius(); // the column's height (StormRenderer)
+        size = Mth.clamp(p.getBbHeight() / 1.8f, .25f, 8);
         strong = new boolean[sc.lines.length];
         for (int i = 0; i < strong.length; i++) strong[i] = line(i).matches(".*(\\*|\\p{Lu}{3}).*");
         long t0 = System.nanoTime();
@@ -175,6 +177,15 @@ public final class Cutscene {
 
     public static boolean active() { return active != null; }
 
+    private static boolean detachedView; // the last frame's camera was out of the player's eyes
+
+    /**
+     * True while the cutscene's camera is away from the player's eyes: the game then reports a third-person camera
+     * (OptionsMixin), so avatar mods (Figura scripts asking "first person?") draw the whole player, not just what
+     * a first-person view would show. The option itself is never changed.
+     */
+    public static boolean thirdPerson() { return active != null && detachedView; }
+
     /** The clock of the last frame drawn (autotest traces). */
     public static float lastT;
 
@@ -184,7 +195,9 @@ public final class Cutscene {
         LocalPlayer p = Minecraft.getInstance().player;
         if (c == null || p == null) return null;
         try {
-            return c.frame(p, partial);
+            View v = c.frame(p, partial);
+            detachedView = v != null && v.detached();
+            return v;
         } catch (RuntimeException e) {
             fail(e);
             return null;
@@ -214,9 +227,9 @@ public final class Cutscene {
     private void plan(ClientLevel level, LocalPlayer p, float r) {
         boolean roof = level.dimensionType().hasCeiling();
         Vec3 fwd = new Vec3(base.x - eye0.x, 0, base.z - eye0.z).normalize(), right = new Vec3(-fwd.z, 0, fwd.x);
-        Vec3 shoulder = place(level, roof, eye0.subtract(fwd.scale(4.6)).add(right.scale(1.9)).add(0, .55, 0), false);
+        Vec3 shoulder = place(level, roof, eye0.subtract(fwd.scale(4.6 * size)).add(right.scale(1.9 * size)).add(0, .55 * size, 0), false);
         if (shoulder == null) shoulder = eye0;
-        Vec3 back = place(level, roof, eye0.subtract(fwd.scale(5.6)).add(right.scale(2.4)).add(0, 1.3, 0), false);
+        Vec3 back = place(level, roof, eye0.subtract(fwd.scale(5.6 * size)).add(right.scale(2.4 * size)).add(0, 1.3 * size, 0), false);
         if (back == null) back = shoulder;
         if (birth) planBirth(level, p, r, roof, fwd, right, shoulder, back);
         else if (sc == DEATH) planDeath(level, p, r, roof, shoulder, back);
@@ -239,7 +252,7 @@ public final class Cutscene {
     }
 
     private void planBirth(ClientLevel level, LocalPlayer p, float r, boolean roof, Vec3 fwd, Vec3 right, Vec3 shoulder, Vec3 back) {
-        Vec3 column = base.add(0, h * .42f, 0), above = seed.add(0, h * .12f, 0), head = eye0.add(0, -.1, 0);
+        Vec3 column = base.add(0, h * .42f, 0), above = seed.add(0, h * .12f, 0), head = eye0.add(0, -.1 * size, 0);
         double a1 = Math.atan2(eye0.z - base.z, eye0.x - base.x);
         // the far shots go round the storm whichever way is more in the open
         Vec3[] far = new Vec3[5];
@@ -265,7 +278,7 @@ public final class Cutscene {
                 far = o;
             }
         }
-        Vec3 crane = place(level, roof, eye0.subtract(fwd.scale(8)).subtract(right.scale(3.5)).add(0, 6, 0), true);
+        Vec3 crane = place(level, roof, eye0.subtract(fwd.scale(8 * size)).subtract(right.scale(3.5 * size)).add(0, 6 * size, 0), true);
         kp[0] = kp[20] = eye0;
         kp[1] = near(level, roof, fwd, right, -3, 1.4, .5);    // out of the eyes, behind
         kp[2] = near(level, roof, fwd, right, .6, 3.2, .1);    // round the side
@@ -285,7 +298,7 @@ public final class Cutscene {
         kp[16] = far[3];
         kp[17] = far[4];
         for (int i = 11; i <= 17; i++) if (kp[i] == null) kp[i] = kp[i - 1]; // no spot for this shot: hold the last one
-        Vec3[] looks = {eye0.add(look0.scale(64)), eye0.add(fwd.scale(5)), head, head.add(0, -.35, 0), head.add(0, .2, 0),
+        Vec3[] looks = {eye0.add(look0.scale(64)), eye0.add(fwd.scale(5)), head, head.add(0, -.35 * size, 0), head.add(0, .2 * size, 0),
                 base.add(0, h * .28f, 0), base.add(0, h * .2f, 0), head, head, base.add(0, h * .3f, 0), base.add(0, h * .5f, 0),
                 tip(8.8f), base.add(0, h * .1f, 0), base.add(0, h * .3f, 0), head, head, base.add(0, h * .4f, 0), base.add(0, h * .45f, 0),
                 base.add(0, h * .16f, 0), above, eye0.add(above.subtract(eye0).normalize().scale(64))}; // the end: where the player looks
@@ -303,7 +316,7 @@ public final class Cutscene {
     /** A spot by the player (blocks towards the storm, to their right, up from their eyes), mirrored or raised if it is blocked; their eyes if all are. */
     private Vec3 near(ClientLevel level, boolean roof, Vec3 fwd, Vec3 right, double f, double rt, double up) {
         for (int i = 0; i < 4; i++) {
-            Vec3 c = eye0.add(fwd.scale(f)).add(right.scale((i & 1) == 0 ? rt : -rt)).add(0, up + (i >> 1), 0);
+            Vec3 c = eye0.add(fwd.scale(f * size)).add(right.scale(((i & 1) == 0 ? rt : -rt) * size)).add(0, (up + (i >> 1)) * size, 0);
             if (open(level, c)) return c;
         }
         return eye0;
@@ -649,6 +662,9 @@ public final class Cutscene {
         float shake = !birth ? 0 : .16f * (float) Math.exp(-Math.max(0, t - IGNITION) * 3) * (t > IGNITION ? 1 : 0)
                 + .07f * StormBirth.descend(t) * (t < TOUCHDOWN ? 1 : 0)
                 + .5f * (float) Math.exp(-Math.max(0, t - TOUCHDOWN) * 1.8f) * (t > TOUCHDOWN ? 1 : 0);
+        float motion = Accessibility.motion(); // the game's "Distortion Effects"
+        shake *= motion;
+        live *= motion;
         pos = pos.add(noise(t * 7.3f, 0) * shake, noise(t * 8.1f, 2) * shake * .7f, noise(t * 6.7f, 4) * shake);
         Vec3 d = target.subtract(pos);
         float yaw = (float) (Mth.atan2(d.z, d.x) * Mth.RAD_TO_DEG) - 90, pitch = (float) -(Mth.atan2(d.y, d.horizontalDistance()) * Mth.RAD_TO_DEG);
@@ -680,6 +696,7 @@ public final class Cutscene {
         if (black > 0) g.fill(0, 0, w, ht, (int) (black * 255) << 24);
         if (birth) { // the screen lit for a moment by the beam and by the storm shutting, in its own color
             float flash = (t > IGNITION ? .28f * (float) Math.exp(-(t - IGNITION) * 5) : 0) + (t > TOUCHDOWN ? .4f * (float) Math.exp(-(t - TOUCHDOWN) * 4) : 0);
+            flash = Accessibility.flash(flash);
             if (flash > .02f) g.fill(0, 0, w, ht, (int) (flash * 255) << 24 | type.core & 0xFFFFFF);
         }
         int shade = (int) (95 * smooth((t - sc.start) / 1.5f) * (1 - smooth((t - sc.end + 1.2f) / 1.2f))); // the frame darkening towards top and bottom
@@ -777,11 +794,39 @@ public final class Cutscene {
         }
     }
 
-    /** Splits line i into words, wraps them to maxW and works out when each is said. */
+    /**
+     * Splits line i into words, wraps them to maxW and works out when each is said. Chinese and Japanese have no
+     * spaces: there each character is a word of its own, set without a gap, so long lines still wrap.
+     */
     private void layout(Font font, int line, float maxW) {
         shownLine = line;
-        String[] raw = line(line).split(" ");
-        int n = raw.length, row = 0, x = 0, space = font.width(" ");
+        java.util.List<String> tokens = new java.util.ArrayList<>();
+        java.util.List<Boolean> shaky = new java.util.ArrayList<>(), gap = new java.util.ArrayList<>();
+        boolean star = false;
+        for (String raw : line(line).split(" ")) {
+            if (raw.isEmpty()) continue;
+            if (!cjk(raw)) {
+                if (raw.startsWith("*")) star = true;
+                tokens.add(raw.replace("*", ""));
+                shaky.add(star);
+                gap.add(true);
+                if (raw.endsWith("*") || raw.replaceAll("[.,!?]+$", "").endsWith("*")) star = false;
+                continue;
+            }
+            for (int i = 0; i < raw.length(); ) {
+                int cp = raw.codePointAt(i);
+                i += Character.charCount(cp);
+                if (cp == '*') {
+                    star = !star;
+                    continue;
+                }
+                tokens.add(new String(Character.toChars(cp)));
+                shaky.add(star);
+                gap.add(false);
+            }
+            if (!gap.isEmpty()) gap.set(gap.size() - 1, true);
+        }
+        int n = tokens.size(), row = 0, x = 0, space = font.width(" ");
         words = new Component[n];
         text = new String[n];
         wordRow = new int[n];
@@ -790,34 +835,40 @@ public final class Cutscene {
         wordShaky = new boolean[n];
         wordLoud = new boolean[n];
         java.util.List<Integer> widths = new java.util.ArrayList<>();
-        boolean star = false;
         float at = .05f;
         for (int k = 0; k < n; k++) {
-            String word = raw[k].replace("*", "");
-            if (raw[k].startsWith("*")) star = true;
-            wordShaky[k] = star;
-            if (raw[k].endsWith("*") || raw[k].replaceAll("[.,!?]+$", "").endsWith("*")) star = false;
+            String word = tokens.get(k);
+            wordShaky[k] = shaky.get(k);
             wordLoud[k] = word.matches(".*\\p{Lu}{3}.*");
             words[k] = Component.literal(word).withStyle(net.minecraft.ChatFormatting.ITALIC);
             text[k] = word;
-            int ww = font.width(words[k]);
-            if (x > 0 && x + ww > maxW) {
-                widths.add(x - space);
+            int ww = font.width(words[k]), after = gap.get(k) ? space : 0;
+            boolean closing = word.length() == 1 && "\u3002\uff0c\u3001\uff01\uff1f\u2026\u2014\uff09\u300d".indexOf(word.charAt(0)) >= 0;
+            if (x > 0 && x + ww > maxW && !closing) { // (CJK punctuation never starts a line)
+                widths.add(x - (k > 0 && gap.get(k - 1) ? space : 0));
                 row++;
                 x = 0;
             }
             wordRow[k] = row;
             wordX[k] = x;
-            x += ww + space;
+            x += ww + after;
             wordAt[k] = at;
-            at += (word.length() + 1) * LETTER; // its letters, a space; then the breaths
+            at += (gap.get(k) ? word.length() + 1 : 2) * LETTER; // its letters and a space (a CJK character: two letters' time); then the breaths
             if (word.endsWith("...") || word.endsWith("\u2026") || word.endsWith("\u2014")) at += .5f;
-            else if (word.endsWith(".") || word.endsWith("!") || word.endsWith("?")) at += .4f;
-            else if (word.endsWith(",")) at += .2f;
+            else if (word.endsWith(".") || word.endsWith("!") || word.endsWith("?") || word.endsWith("\u3002") || word.endsWith("\uff01") || word.endsWith("\uff1f")) at += .4f;
+            else if (word.endsWith(",") || word.endsWith("\uff0c") || word.endsWith("\u3001")) at += .2f;
         }
-        widths.add(x - space);
+        widths.add(Math.max(0, x - (n > 0 && gap.get(n - 1) ? space : 0)));
         rowW = widths.stream().mapToInt(Integer::intValue).toArray();
         spoken = at;
+    }
+
+    /** True if the word is written in Chinese or Japanese characters (no spaces between words). */
+    private static boolean cjk(String s) {
+        return s.codePoints().anyMatch(cp -> {
+            Character.UnicodeScript sc = Character.UnicodeScript.of(cp);
+            return sc == Character.UnicodeScript.HAN || sc == Character.UnicodeScript.HIRAGANA || sc == Character.UnicodeScript.KATAKANA;
+        });
     }
 
     // ---------------------------------------------------------------- events

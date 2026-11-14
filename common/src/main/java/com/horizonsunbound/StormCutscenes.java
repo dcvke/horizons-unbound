@@ -79,6 +79,7 @@ public final class StormCutscenes {
     /** Twice a second: has this player just found a kind of storm they have never met? */
 
     public static void onPlayerTick(ServerPlayer p) {
+        StormAdvancements.tick(p);
         if (p.tickCount % 10 != 0 || !StormsConfig.CUTSCENES.get() || !p.isAlive() || !steady(p) || watching(p)) return;
         ServerLevel level = p.serverLevel();
         if (!level.dimensionType().hasCeiling() && !level.canSeeSky(p.blockPosition())) return; // not found from a cave

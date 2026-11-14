@@ -6,3 +6,4 @@ src/generated/**/*.json text eol=lf
 gradlew text eol=lf
 gradlew.bat text eol=crlf
 *.sh text eol=lf
+LICENSE -text

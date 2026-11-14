@@ -1,0 +1,46 @@
+{
+  "parent": "horizons_unbound:root",
+  "display": {
+    "icon": {
+      "id": "minecraft:recovery_compass"
+    },
+    "title": {
+      "translate": "advancements.horizons_unbound.all_kinds.title"
+    },
+    "description": {
+      "translate": "advancements.horizons_unbound.all_kinds.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "overworld": {
+      "trigger": "minecraft:impossible"
+    },
+    "nether": {
+      "trigger": "minecraft:impossible"
+    },
+    "end": {
+      "trigger": "minecraft:impossible"
+    },
+    "deep_dark": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "overworld"
+    ],
+    [
+      "nether"
+    ],
+    [
+      "end"
+    ],
+    [
+      "deep_dark"
+    ]
+  ]
+}

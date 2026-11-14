@@ -1,0 +1,21 @@
+# Frame rate with no storm, with a storm in view and with two merging storms; the server's cost per storm (/storm debug).
+/storm clear
+/time set 6000
+/difficulty normal
+/tp @s 0 140 0 0 8
+wait 200
+shot none_a
+wait 100
+shot none_b
+/storm spawn nether 200
+wait 900
+shot one_a
+wait 100
+shot one_b
+/storm debug
+/storm twin
+wait 1600
+shot two_a
+wait 100
+shot two_b
+/storm debug

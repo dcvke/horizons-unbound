@@ -1,0 +1,23 @@
+{
+  "parent": "horizons_unbound:root",
+  "display": {
+    "icon": {
+      "id": "minecraft:magma_block"
+    },
+    "title": {
+      "translate": "advancements.horizons_unbound.seen_nether.title"
+    },
+    "description": {
+      "translate": "advancements.horizons_unbound.seen_nether.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "seen": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

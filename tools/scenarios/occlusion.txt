@@ -1,0 +1,50 @@
+# Bands must not shine through blocks: stone walls and a roof between the camera and the storm (its wall 80 blocks ahead when spawned).
+/storm clear
+/time set 6000
+/gamemode spectator
+/spreadplayers 0 0 0 300 false @s
+wait 60
+/tp @s ~ ~4 ~ 0 -8
+wait 20
+/storm spawn overworld 120
+wait 900
+/tp @s ~ ~ ~ 0 -8
+wait 10
+shot open
+# the arcs must still shine through the cloud: from below, and from above the cap
+/tp @s ~ ~ ~ 0 -55
+wait 10
+shot open_up
+/tp @s ~ ~300 ~ 0 25
+wait 20
+shot above_cap
+/tp @s ~ ~-300 ~ 0 -8
+wait 20
+# a stone wall right in front: nothing of the storm below its top may show
+/fill ~-30 ~-12 ~5 ~30 ~14 ~5 minecraft:stone
+wait 20
+shot wall_near
+# a roof overhead, looking up at the cap's arcs through it
+/fill ~-12 ~3 ~-12 ~12 ~3 ~4 minecraft:stone
+/tp @s ~ ~ ~ 0 -55
+wait 20
+shot roof
+/fill ~-30 ~-12 ~5 ~30 ~14 ~5 minecraft:air
+/fill ~-12 ~3 ~-12 ~12 ~3 ~4 minecraft:air
+# close to the storm's wall (10 blocks), a wall of stone 4 blocks ahead
+/tp @s ~ ~ ~70 0 -8
+wait 20
+shot close_open
+/fill ~-25 ~-12 ~4 ~25 ~20 ~4 minecraft:stone
+wait 20
+shot close_wall
+/tp @s ~ ~ ~ 0 -40
+wait 10
+shot close_wall_up
+# far off, behind a hill-sized wall that hides the storm's foot
+/tp @s ~ ~ ~-170 0 -2
+wait 20
+shot far_open
+/fill ~-30 ~-12 ~12 ~30 ~4 ~12 minecraft:stone
+wait 20
+shot far_hill

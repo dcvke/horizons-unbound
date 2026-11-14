@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--shaderpack', type=Path)
     parser.add_argument('--kubejs', action='store_true')
     parser.add_argument('--resume', action='store_true')
-    parser.add_argument('--language', choices=['en_us', 'ru_ru'])
+    parser.add_argument('--language', help='a game language code, such as en_us, ru_ru or zh_cn')
     parser.add_argument('--production', action='store_true', help='Run the remapped Fabric jar with the normal production loader')
     args = parser.parse_args()
     if args.production and args.loader != 'fabric': parser.error('--production is a Fabric check')
@@ -37,7 +37,7 @@ def main():
     results = json.loads(results_file.read_text()) if args.resume and results_file.exists() else []
     wrapper = root / ('gradlew.bat' if os.name == 'nt' else 'gradlew')
     for scenario in args.scenarios:
-        if scenario not in SCENARIOS + ['config']:
+        if scenario not in SCENARIOS + ['config'] and not (root / 'tools/scenarios' / (scenario + '.txt')).exists():
             parser.error('Unknown scenario: ' + scenario)
         previous = next((result for result in results if result['scenario'] == scenario), None)
         if previous and previous['exit'] == 0 and previous['done'] and not previous['failures'] and not previous['errors']:

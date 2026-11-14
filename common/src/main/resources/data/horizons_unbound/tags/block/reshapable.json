@@ -15,6 +15,14 @@
     "minecraft:end_stone",
     "minecraft:magma_block",
     "minecraft:blackstone",
-    "minecraft:basalt"
+    "minecraft:basalt",
+    {
+      "id": "#c:sands",
+      "required": false
+    },
+    {
+      "id": "#c:gravels",
+      "required": false
+    }
   ]
 }

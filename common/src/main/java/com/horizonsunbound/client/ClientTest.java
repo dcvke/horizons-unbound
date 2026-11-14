@@ -134,6 +134,25 @@ public final class ClientTest {
             } else if (s.startsWith("note ")) log(arg);
             else if (s.startsWith("hud ")) mc.options.hideGui = !arg.equals("on");
             else if (s.startsWith("trace ")) trace = arg.equals("on");
+            else if (s.startsWith("voice ")) { // a 20 ms voice frame, as Simple Voice Chat would decode it: loud (speech) or quiet (breath)
+                var server = mc.getSingleplayerServer();
+                var id = mc.player.getUUID();
+                short[] pcm = new short[960];
+                for (int i = 0; i < pcm.length; i++) pcm[i] = (short) ((arg.equals("loud") ? 16000 : 300) * Math.sin(i * .13));
+                server.execute(() -> log("voice " + arg + " heard=" + com.horizonsunbound.compat.VoiceNoise.voice(server.getPlayerList().getPlayer(id), pcm)));
+            }
+            else if (s.equals("pulses")) { // the Deep Dark storms' answers the client can see now
+                long n = ClientStorms.all().stream().flatMap(st -> st.marks.stream()).filter(k -> k.kind() == com.horizonsunbound.Storm.Mark.PULSE).count();
+                log("pulses " + n);
+            }
+            else if (s.startsWith("figura ")) { // wear a local Figura avatar (the folder's path); Figura must be in run-test/mods
+                try {
+                    Class.forName("org.figuramc.figura.avatar.AvatarManager").getMethod("loadLocalAvatar", Path.class).invoke(null, Path.of(arg));
+                    log("figura avatar " + arg);
+                } catch (ReflectiveOperationException | LinkageError e) {
+                    log("FAIL figura: " + e);
+                }
+            }
             else if (s.equals("punch")) { // hold the attack button, swinging
                 mc.options.keyAttack.setDown(true);
                 mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);

@@ -3,8 +3,9 @@
   "id": "${mod_id}",
   "version": "${mod_version}",
   "name": "${mod_name}",
-  "description": "Huge dimensional storms with their own skies, worlds and stories.",
-  "authors": ["dcvke"],
+  "description": "Huge dimensional storms roll across your world, bringing pieces of the End, the Nether, the Overworld and the Deep Dark with them.",
+  "icon": "horizons_unbound.png",
+  "authors": ["Fogmare Motions"],
   "contact": {
     "homepage": "https://github.com/dcvke/horizons-unbound",
     "sources": "https://github.com/dcvke/horizons-unbound",
@@ -15,7 +16,9 @@
   "entrypoints": {
     "main": ["com.horizonsunbound.fabric.FabricMod"],
     "client": ["com.horizonsunbound.fabric.FabricClient"],
-    "fabric-gametest": ["com.horizonsunbound.fabric.FabricTests"]
+    "fabric-gametest": ["com.horizonsunbound.fabric.FabricTests"],
+    "journeymap": ["com.horizonsunbound.compat.JourneyMapMarks"],
+    "voicechat": ["com.horizonsunbound.compat.VoiceHearing"]
   },
   "mixins": ["horizons_unbound.mixins.json", "horizons_unbound.fabric.mixins.json"],
   "accessWidener": "horizons_unbound.accesswidener",

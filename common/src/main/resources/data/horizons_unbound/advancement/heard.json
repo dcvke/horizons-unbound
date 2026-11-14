@@ -1,0 +1,23 @@
+{
+  "parent": "horizons_unbound:seen_deep_dark",
+  "display": {
+    "icon": {
+      "id": "minecraft:sculk_sensor"
+    },
+    "title": {
+      "translate": "advancements.horizons_unbound.heard.title"
+    },
+    "description": {
+      "translate": "advancements.horizons_unbound.heard.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "heard": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
