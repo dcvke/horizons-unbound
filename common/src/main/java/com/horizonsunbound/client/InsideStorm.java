@@ -326,23 +326,27 @@ public final class InsideStorm {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         float t = (mc.player.tickCount + partial) / 20f;
-        if (type == StormType.END) shards(mc, cam, t);
+        if (type == StormType.END) shards(mc, cam, partial, t);
         if (!PRINTS.isEmpty()) footprints(cam);
     }
+
+    private static final int SHARD_COUNT = 12;
 
     /**
      * Pieces of the End drifting around you, slowly turning: small cubes with the blocks' own textures, drawn in our
      * own pass (shared buffers are batched by other mods and may be flushed elsewhere).
      */
-    private static void shards(Minecraft mc, Vec3 cam, float t) {
-        Vec3 c = mc.player.getPosition(1).add(0, 1, 0);
+    private static void shards(Minecraft mc, Vec3 cam, float partial, float t) {
+        // the same in-between position the camera uses, or they jerk along each tick while you walk
+        Vec3 c = mc.player.getPosition(partial).add(0, 1, 0);
         RenderType rt = RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS);
         BufferBuilder b = Tesselator.getInstance().begin(rt.mode(), rt.format());
         PoseStack pose = new PoseStack();
-        for (int i = 0; i < 10; i++) {
-            float rad = 3 + (i * 37 % 10) * .35f, ang = i * 2.39f + t * (.15f + (i % 3) * .05f), size = .32f + (i * 13 % 7) * .04f;
+        for (int i = 0; i < SHARD_COUNT; i++) {
+            // evenly round the circle and all at one speed, so they stay all round you; radius and height alternate
+            float rad = 2.8f + (i % 3) * .7f, ang = i * Mth.TWO_PI / SHARD_COUNT + t * .18f, size = .32f + (i * 13 % 7) * .04f;
             pose.pushPose();
-            pose.translate(c.x - cam.x + Mth.cos(ang) * rad, c.y - cam.y + (i % 5) * .7f - 1.2f + Mth.sin(t * .7f + i) * .3f, c.z - cam.z + Mth.sin(ang) * rad);
+            pose.translate(c.x - cam.x + Mth.cos(ang) * rad, c.y - cam.y + (i * 7 % 5) * .65f - 1.2f + Mth.sin(t * .7f + i) * .3f, c.z - cam.z + Mth.sin(ang) * rad);
             pose.mulPose(Axis.YP.rotationDegrees(t * 40 + i * 30));
             pose.mulPose(Axis.XP.rotationDegrees(t * 25 + i * 50));
             float sc = size * weight;
