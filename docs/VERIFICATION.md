@@ -1,5 +1,9 @@
 # Verification snapshots
 
+## Studio and license update — 2026-11-15
+
+Current sources credit Severed Tomorrow and use the Severed Tomorrow Mod License 1.0 (`LicenseRef-Severed-Tomorrow-Mod-License-1.0`). The root `LICENSE` is an exact copy of the supplied license file. Earlier verification entries describe the artifacts and licenses used at the time of those checks.
+
 ## Version 1.0.1 — 2026-11-14
 
 1.0.1 fixes cutscene shots that reached past the loaded world, glowing arcs seen through distant hills, storms announced over unloaded chunks starting at the bottom of the world, storm creatures that never left, rain killing a Fire Twister's blazes and End echoes bypassing Sodium's fast rendering path. Both branches were rebuilt:
@@ -29,7 +33,7 @@ Horizons Unbound 1.0.0 was rebuilt on both source branches before the first GitH
 
 The source comparison confirmed identical public API declarations, optional-mod integration implementations and compile-time stand-ins; common and client configuration definitions match after normalizing the config library API. All 42 shared asset/translation files match byte for byte or as parsed translation entries, allowing the additional 1.20.1 Client section label. All ten advancements match after adapting the icon field name. Other Java and data differences were reviewed as [Minecraft port requirements](PARITY.md).
 
-All four binary jars and all four source jars were inspected as ZIP archives. Each includes every shared source/class and resource expected for its branch, the final Fogmare Mod License 1.0 and no compile-time stand-ins. Mod classes target Java 21 on 1.21.1 and Java 17 on 1.20.1. Fabric binaries use remapped production names; Forge includes its refmap and nested MixinExtras dependency. Metadata versions and license identifiers were checked. Each Minecraft-version release includes a SHA-256 checksum file for its four jars.
+All four binary jars and all four source jars were inspected as ZIP archives. Each includes every shared source/class and resource expected for its branch, the license supplied for that release and no compile-time stand-ins. Mod classes target Java 21 on 1.21.1 and Java 17 on 1.20.1. Fabric binaries use remapped production names; Forge includes its refmap and nested MixinExtras dependency. Metadata versions and license identifiers were checked. Each Minecraft-version release includes a SHA-256 checksum file for its four jars.
 
 The supplied license was synchronized to both source branches and the jars, with the contact-placeholder clause removed and the remaining section 7 clauses renumbered at the author's request. Local test worlds, logs, downloaded compatibility mods, draft mod-page copy and assistant instructions are excluded from publication.
 
