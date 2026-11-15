@@ -18,7 +18,7 @@ The village bells start before you can see anything. Then the sky loses its usua
 
 Horizons Unbound brings enormous dimensional storms into Minecraft: moving columns of cloud and light that carry the End, Nether, Overworld and Deep Dark with them. They change the weather around you, bring creatures and fragments of other places, and turn a familiar journey into one you might remember.
 
-[![A player watches the birth of the Void Rift](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/void-rift-birth.jpg)](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/video/void-rift-birth.mp4)
+[![A player watches the birth of the Void Rift](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/void-rift-birth.jpg)](https://dcvke.github.io/horizons-unbound-media/video/void-rift-birth.mp4)
 
 *Watch the Void Rift arrive — click the image for the 22-second scene.*
 

@@ -20,7 +20,7 @@ An anchor is a local refuge. It does not dismiss the storm or clear the whole la
 
 ## Watching it arrive
 
-[![The Void Rift arrives](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/void-rift-birth.jpg)](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/video/void-rift-birth.mp4)
+[![The Void Rift arrives](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/void-rift-birth.jpg)](https://dcvke.github.io/horizons-unbound-media/video/void-rift-birth.mp4)
 
 The linked scene shows its birth. Cutscenes can be skipped or disabled; the effects still operate afterward. To stage an announced encounter, an operator can use `/storm omen end 150` in a test world.
 
