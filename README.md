@@ -2,10 +2,16 @@
   <img src="https://cdn.modrinth.com/data/cached_images/782f5cf4f7c1fb626daae6711ff4d354cae265af.png" alt="Horizons Unbound" width="780">
 </p>
 
+<p align="center">
+  <a href="https://www.curseforge.com/minecraft/mc-mods/horizons-unbound"><img src="https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/icons/curseforge_icon_bg.png" alt="CurseForge" title="CurseForge" width="64" height="64"></a>
+  <a href="https://github.com/dcvke/horizons-unbound"><img src="https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/icons/github_icon_bg.png" alt="GitHub" title="GitHub" width="64" height="64"></a>
+  <a href="https://modrinth.com/project/horizonsunbound"><img src="https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/icons/modrinth_icon_bg.png" alt="Modrinth" title="Modrinth" width="64" height="64"></a>
+  <img src="https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/icons/discord_icon_bg.png" alt="Discord (coming soon)" title="Discord (coming soon)" width="64" height="64">
+</p>
+
 <p align="center"><em>There was nothing on that hill yesterday.</em></p>
 
 <p align="center">
-  <a href="https://modrinth.com/project/horizonsunbound">Modrinth</a> ·
   <a href="https://github.com/dcvke/horizons-unbound/releases">Downloads</a> ·
   <a href="docs/wiki/Home.md">Field guide</a> ·
   <a href="https://github.com/dcvke/horizons-unbound/issues">Report a bug</a>
