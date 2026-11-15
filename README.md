@@ -43,19 +43,19 @@ Purple rings, hanging arrows and distances that no longer feel quite right. Grav
 
 The column brightens. A wave of heat rolls out, leaving Hot Crust underfoot and ash in the air. There is something to gain from getting close: equipment dropped in its heart can be tempered by a passing heat wave.
 
-![The orange Fire Twister](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/nether-storm.jpg)
+![The orange Fire Twister](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/webp-compact/nether-storm.webp)
 
 ### Thunder Funnel · Overworld
 
 Snow gathers on one side of the storm while new streams run through the other. Watch for glowing ground before lightning strikes. If you make it into the eye, take a moment to enjoy the quiet.
 
-![The blue Thunder Funnel](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/overworld-storm.jpg)
+![The blue Thunder Funnel](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/webp-compact/overworld-storm.webp)
 
 ### Deep Whisper · Deep Dark
 
 Sounds fade inside the teal column. Your footsteps still count. The Deep Whisper follows vibrations and answers repeated noise with Darkness. With Simple Voice Chat installed, it hears your voice too.
 
-![The teal Deep Whisper](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/deep-dark-storm.jpg)
+![The teal Deep Whisper](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/webp-compact/deep-dark-storm.webp)
 
 ## Someone has been here before
 
