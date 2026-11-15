@@ -1,6 +1,6 @@
 # The recovered journal
 
-*The entries below belong to the story of this guide. The ink changes halfway through. The handwriting does not.*
+*The ink changes halfway through. The handwriting does not.*
 
 ## The western road
 

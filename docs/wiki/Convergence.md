@@ -16,11 +16,11 @@ The operator command `/storm twin` asks for a second storm beside an existing on
 
 Encountering all four kinds leads towards the Great Storm and its finale. The mod tracks related advancements, including `all_kinds` and `grand`. Cutscenes are presentation; advancement progression is still supported when they are disabled.
 
-The finale is deliberately left out of the main survival entries. If you want to stage it rather than discover it, an operator can use `/storm grand` in a test world. That command is an administrative demonstration, not an extra survival crafting recipe or a hidden rite.
+The finale is deliberately left out of the main survival entries. If you want to stage it rather than discover it, an operator can use `/storm grand` in a test world. Use a spare world if you want to see it before finding it in survival.
 
 ## The traveller's explanation
 
-The journal proposes that the four storms are places touching the same weak point in the world. The Great Storm would be that point giving way. It is a story the traveller uses to make sense of what they see, not a second progression system that the player has to solve.
+By the last entries, the traveller believes the four storms are places touching the same weak point in the world. The Great Storm would be that point giving way. They leave the thought unfinished.
 
 There is a page after the account of the convergence. It has no sketch, no measurements and no date. Just a pencilled line, pressed hard enough to mark the sheet beneath it:
 

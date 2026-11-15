@@ -59,6 +59,6 @@ Kinds are `end`, `nether`, `overworld`, `deep_dark`. An explicit diameter must b
 
 ## Personal comfort
 
-Client cutscenes and storm volume can be adjusted independently. Minecraft's Hide Lightning Flashes softens flashes and flicker; Distortion Effects scales camera movement. The [addon documentation](../ADDONS.md) covers the full configuration and scripting surface.
+Client cutscenes and storm volume can be adjusted independently. Minecraft's Hide Lightning Flashes softens flashes and flicker; Distortion Effects scales camera movement.
 
 [Back to the guide](Home.md)

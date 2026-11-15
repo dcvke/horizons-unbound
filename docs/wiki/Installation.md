@@ -24,6 +24,6 @@ For a first look, use a separate test world. An operator can run `/storm omen en
 
 Keep a backup before changing a modded world's setup. The mod records player-placed blocks while it is installed. It cannot infer a complete history of buildings made before that record existed. Review protection settings and claims before enabling terrain changes around an older settlement.
 
-If startup fails, check version matching before changing storm settings. For visual issues after a successful launch, read [compatibility notes](Server-and-Compatibility.md). Build instructions and development tools remain in the [README](../../README.md).
+If startup fails, check version matching before changing storm settings. For visual issues after a successful launch, read [compatibility notes](Server-and-Compatibility.md).
 
 [Back to the guide](Home.md)

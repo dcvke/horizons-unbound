@@ -10,7 +10,7 @@ Inside the column, the storm reacts to player-caused vibration events: footsteps
 
 Visible pulses trace a heard noise towards the column. The storm also listens to voice activity when the optional Simple Voice Chat integration is installed. Voice chat is not required to play the mod.
 
-In the checked 1.21.1 implementation, four counted noises within a ten-second window trigger four seconds of **Darkness**. The listener limits repeated pulses to one per half-second. Darkness is the response; this listening effect does not directly deal damage.
+In Minecraft 1.21.1, four counted noises within a ten-second window trigger four seconds of **Darkness**. The listener limits repeated pulses to one per half-second. Darkness is the response; this listening effect does not directly deal damage.
 
 ## Creatures and expectations
 

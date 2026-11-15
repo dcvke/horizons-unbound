@@ -16,7 +16,7 @@ Ground changes and water features still operate within the mod's terrain and pro
 
 Skeletons and zombies are in the default creature list for an Overworld storm. The mod's creature subsystem is separate from vanilla weather spawning, has a default cap of four creatures per storm and does not spawn its creatures in Peaceful.
 
-When configured to occur in other dimensions, an Overworld storm can bring its own terrain and structure fragments there. Natural spawning outside the Overworld is configurable but less tested; an operator demonstration is not evidence that every modded dimension has been verified.
+When configured to occur in other dimensions, an Overworld storm can bring its own terrain and structure fragments there. If you enable natural storms in another dimension, try the setup in a spare world first.
 
 For a controlled look at the blue storm, `/storm omen overworld 150` includes the announced arrival. `/storm spawn overworld 150` places one immediately. Both require operator permission level 2.
 

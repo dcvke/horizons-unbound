@@ -16,9 +16,9 @@ The default storm creature list contains blazes and magma cubes. Nether structur
 
 Tempering happens to a **dropped, damageable item** when a heat wave passes it in the storm's heart, within half the storm's radius. Wearing an item or standing near the column is not the same trigger.
 
-In the checked 1.21.1 implementation, tempering increases maximum durability by **50%**. Armour gains **+1 armour toughness**; an eligible item with an attack-damage attribute gains **+1 attack damage** in the main hand. The item receives a tempered marker, lore and a glint. An already tempered item is not tempered repeatedly.
+In Minecraft 1.21.1, tempering increases maximum durability by **50%**. Armour gains **+1 armour toughness**; an eligible item with an attack-damage attribute gains **+1 attack damage** in the main hand. The item receives a tempered marker, lore and a glint. An already tempered item is not tempered repeatedly.
 
-These are implementation details for the checked build; other Minecraft versions can represent item data differently. Try ordinary equipment before risking a unique modded item, and consult the matching source/build when an addon changes item attributes.
+Modded equipment can behave differently. Try an ordinary tool first before risking something you cannot replace.
 
 Tempering is an opportunity inside a dangerous area, not a promise that everything dropped into fire will survive. Recovery is still your problem.
 
