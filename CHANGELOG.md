@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Updated studio credits to Severed Tomorrow and the license identifier to `LicenseRef-Severed-Tomorrow-Mod-License-1.0`.
+
 ## 1.0.1 — Rendering and storm fixes
 
 - Kept cutscene cameras within the loaded world and adjusted fog to hide its edge, preventing distant shots from showing cut-off terrain and empty space. The featured storm remains visible during its cutscene even at short render distances.
@@ -46,7 +50,7 @@ Available for Minecraft 1.21.1 on NeoForge and Fabric, and Minecraft 1.20.1 on F
 - A loader-neutral Java API exposes storm queries, spawning, lifecycle listeners and custom effects. Forge and NeoForge also expose native events for addons and KubeJS scripts.
 - Resource packs can replace visuals, sounds and text; data packs can extend protected and reshapable block tags or replace advancements.
 - Source, build instructions, binary and source jars, addon documentation and verification notes accompany the release.
-- Distributed under the Fogmare Mod License 1.0.
+- Distributed under the custom mod license included with that release.
 
 See [addon documentation](docs/ADDONS.md) for integration details and [verification notes](docs/VERIFICATION.md) for tested combinations and limits.
 
