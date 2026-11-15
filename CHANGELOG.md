@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.0.2 — End storm shards
 
 - Updated studio credits to Severed Tomorrow and the license identifier to `LicenseRef-Severed-Tomorrow-Mod-License-1.0`.
+- Made the End shards inside a Void Rift move smoothly with the player while walking, and spread them evenly all around instead of bunching on one side.
 
 ## 1.0.1 — Rendering and storm fixes
 

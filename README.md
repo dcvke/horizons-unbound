@@ -19,7 +19,7 @@ Huge dimensional storms bring the End, Nether, Overworld and Deep Dark into your
 
 ## Downloads and requirements
 
-Use the jar for your Minecraft version and loader. Install Horizons Unbound on both the server and clients. Version **1.0.1** uses mod id `horizons_unbound` on every loader.
+Use the jar for your Minecraft version and loader. Install Horizons Unbound on both the server and clients. Version **1.0.2** uses mod id `horizons_unbound` on every loader.
 
 | Minecraft | Loader | Java | Required additional mods | Settings screen |
 |---|---|---|---|---|
