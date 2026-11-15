@@ -1,21 +1,86 @@
+<p align="center">
+  <img src="https://cdn.modrinth.com/data/cached_images/782f5cf4f7c1fb626daae6711ff4d354cae265af.png" alt="Horizons Unbound" width="780">
+</p>
+
+<p align="center"><em>There was nothing on that hill yesterday.</em></p>
+
+<p align="center">
+  <a href="https://modrinth.com/project/horizonsunbound">Modrinth</a> ·
+  <a href="https://github.com/dcvke/horizons-unbound/releases">Downloads</a> ·
+  <a href="docs/wiki/Home.md">Field guide & lore</a> ·
+  <a href="docs/ADDONS.md">Addon documentation</a> ·
+  <a href="https://github.com/dcvke/horizons-unbound/issues">Report an issue</a>
+</p>
+
 # Horizons Unbound
 
-Huge dimensional storms bring the End, Nether, Overworld and Deep Dark into your world. Each storm has its own sky, sounds and effects, with cinematic encounters, merging storms, Reality Anchors and Hot Crust.
+The village bells start before you can see anything. Then the sky loses its usual colour, and something begins to gather beyond the trees. You have time to get home. You also have time to make a very bad decision.
 
-## Features
+Horizons Unbound brings enormous dimensional storms into Minecraft: moving columns of cloud and light that carry the End, Nether, Overworld and Deep Dark with them. They change the weather around you, bring creatures and fragments of other places, and turn a familiar journey into one you might remember.
 
-- **Four kinds of storm**: End, Nether, Overworld and Deep Dark, each a towering column of cloud with glowing rings, its own sky, fog, sounds and effects on the world. Two storms can collide and merge; meet them all and the Great Storm comes.
-- **A storm's life**: omens first (a darkening sky, rising wind, ringing village bells and a warning of where it is gathering), then its birth, about a quarter of an hour drifting across the land, and its death.
-- **Pieces of other dimensions**: patches of their ground and fragments of their structures, never on what players built, near spawn or beds, or in land claims.
-- **Each kind acts differently**: echoes, seams and gravity waves in the End; heat waves, hot crust and tempered gear in the Nether; weather bands, streams and charged ground in the Overworld; a Deep Dark storm hears every step, and voices too.
-- **Creatures of the storm**: mobs of its dimension appear around it and leave with it.
-- **Cutscenes** for a storm's birth, the first meeting with each kind, its death and the finale, with the player acting them out. Each player can turn them off; holding Shift skips one.
-- **Reality Anchors** keep space normal around them under End storms.
-- **Advancements** for seeing each storm, the Great Storm, the eye of the storm, tempering and being heard.
-- **Every setting adjustable** in game or in the config files: frequency, chance, kinds, dimensions, length, speed, size, creatures, terrain changes, protection, view distance and more.
-- **Twelve languages**: English, Russian, Spanish, Portuguese, French, German, Chinese, Japanese, Korean, Polish, Turkish and Ukrainian.
-- **Accessibility**: follows the game's "Hide Lightning Flashes" and "Distortion Effects" settings.
-- **Works with** shader packs (Iris/Oculus, including Complementary and Photon), Distant Horizons, JourneyMap and Xaero's maps, Simple Voice Chat, Figura, claim mods, KubeJS and addons through a Java API.
+[![A player watches the birth of the Void Rift](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/void-rift-birth.jpg)](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/video/void-rift-birth.mp4)
+
+*Watch the Void Rift arrive — click the image for the 22-second scene.*
+
+## A reason to watch the horizon
+
+A storm has a beginning, a life and an ending. Warnings lead into its birth; it then drifts across the landscape before coming apart. The default lifetime is fifteen minutes, including birth and death. Storms can meet and merge, combining their effects. Meeting all four kinds leads towards the Great Storm.
+
+Their presence reaches beyond the column. The sky and fog change, sounds move around you, and the ground can acquire patches of another dimension. A storm may leave a fragment of a structure rather than an entire building. Creatures can arrive with it, then disappear when it dies.
+
+Cutscenes follow births, first encounters, deaths and the finale. Your character takes part in them. Hold Shift to skip, or switch them off in your client settings; servers can disable them for everyone. Storms and advancement progress still work without them.
+
+## Four ways for the weather to go wrong
+
+![Storms and their effects](https://cdn.modrinth.com/data/cached_images/2a5ef9c5cf2462901bd4f60abb1abf1be91f260a_0.webp)
+
+### Void Rift · End
+
+Purple light, unsteady distances, arrows that seem to forget where they were going. The Void Rift brings echoes of players, spatial seams and gravity waves. A Reality Anchor offers a small place where those distortions stop.
+
+![Purple rings around a Void Rift](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/webp-compact/end-storm.webp)
+
+[Read the field notes](docs/wiki/Void-Rift.md)
+
+### Deep Whisper · Deep Dark
+
+The air goes quiet. Your footsteps do not. This storm listens for vibrations and answers repeated noise with Darkness. With Simple Voice Chat installed, it can hear your voice as well. There are no storm-spawned Deep Dark creatures in the default configuration; the listening is enough.
+
+![Teal light around the Deep Whisper](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/deep-dark-storm.jpg)
+
+[Learn what it hears](docs/wiki/Deep-Whisper.md)
+
+### Fire Twister · Nether
+
+Watch the column charge, then watch the ground. Heat waves roll outward, open ground becomes Hot Crust, and running near soul flames can wake the things around you. There is a reason to approach: dropped equipment caught by a heat wave in the storm's heart can be tempered.
+
+![Orange rings around a Fire Twister](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/nether-storm.jpg)
+
+[Read about heat and tempering](docs/wiki/Fire-Twister.md)
+
+### Thunder Funnel · Overworld
+
+Frost, thaw, new streams, and ground that gives a brief warning before lightning finds it. The blue storm looks familiar from a distance. Its quiet eye is easier to appreciate once you have crossed the weather around it.
+
+![Blue rings around a Thunder Funnel](https://raw.githubusercontent.com/dcvke/horizons-unbound-media/main/posters/overworld-storm.jpg)
+
+[Read the weather notes](docs/wiki/Thunder-Funnel.md)
+
+## The notebook from the western road
+
+> The compass was still pointing north. That was the part I trusted least.
+
+The [field guide](docs/wiki/Home.md) follows a traveller trying to understand what the storms are bringing through. Read the [recovered journal](docs/wiki/Field-Journal.md) in order, or turn straight to the practical entries on [surviving a first encounter](docs/wiki/First-Encounter.md), [anchors and Hot Crust](docs/wiki/Anchors-and-Hot-Crust.md), and [converging storms](docs/wiki/Convergence.md).
+
+Journal passages supply the story; the playing notes explain the implemented mechanics. Server owners have a separate [settings and commands reference](docs/wiki/Settings-and-Commands.md).
+
+## Bring it into your world
+
+Install the matching build on the server and every client. Start with the requirements below, then adjust the storm settings to suit your world. Natural spawning defaults to the Overworld; the default check interval is 45 minutes of eligible play, with an 80% chance at each check. A failed roll starts that interval again. This is a chance-based event, not a guaranteed countdown.
+
+Terrain changes respect recorded player placements, protected areas around spawn and beds, protected block tags, and supported claim hooks. Existing buildings from before the mod was installed may need extra protection. For the precise boundaries of those protections, see [server notes](docs/wiki/Server-and-Compatibility.md).
+
+The mod also provides advancements, twelve languages, resource-pack overrides and an addon API. Minecraft's Hide Lightning Flashes and Distortion Effects settings apply to storm visuals and camera effects.
 
 ## Downloads and requirements
 
@@ -42,7 +107,7 @@ Install JDK 21 to run Gradle and Loom on either branch, then run:
 
 The `1.20.1` branch compiles and launches Minecraft with a Java 17 toolchain, which Gradle provisions automatically when needed. Its jars require Java 17 for players. The `1.21.1` branch uses Java 21 throughout.
 
-On Windows, use `.\gradlew.bat build`. Binary and source jars are in each loader module's `build/libs/`, named `horizons_unbound-<loader>-<minecraft>-1.0.0.jar` and `-sources.jar`.
+On Windows, use `.\gradlew.bat build`. Binary and source jars are in each loader module's `build/libs/`, named `horizons_unbound-<loader>-<minecraft>-<version>.jar` and `-sources.jar`.
 
 Run `./gradlew :neoforge:runClient` or `:fabric:runClient` on `1.21.1`; use `:forge:runClient` or `:fabric:runClient` on `1.20.1`. Each loader also provides `runServer`, `runGameTestServer` and `runClientTest` tasks.
 
