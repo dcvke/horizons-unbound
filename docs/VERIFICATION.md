@@ -2,7 +2,7 @@
 
 ## Studio and license update — 2026-11-15
 
-Current sources credit Severed Tomorrow and use the Severed Tomorrow Mod License 1.0 (`LicenseRef-Severed-Tomorrow-Mod-License-1.0`). The root `LICENSE` is an exact copy of the supplied license file. Earlier verification entries describe the artifacts and licenses used at the time of those checks.
+Current sources credit Meridusk and use the Meridusk Mod License 1.0 (`LicenseRef-Meridusk-Mod-License-1.0`). The root `LICENSE` is an exact copy of the supplied license file. Earlier verification entries describe the artifacts and licenses used at the time of those checks.
 
 ## Version 1.0.1 — 2026-11-14
 

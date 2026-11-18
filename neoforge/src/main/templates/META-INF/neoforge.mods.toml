@@ -9,7 +9,7 @@ version="${mod_version}"
 displayName="${mod_name}"
 displayURL="https://github.com/dcvke/horizons-unbound"
 logoFile="horizons_unbound.png"
-authors="Severed Tomorrow"
+authors="Meridusk"
 description='''
 Huge dimensional storms roll across your world, bringing pieces of the End, the Nether, the Overworld and the Deep Dark with them.
 '''

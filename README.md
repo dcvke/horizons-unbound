@@ -98,4 +98,4 @@ Storms protect recorded player-placed blocks, areas around world spawn and beds,
 
 [Get the mod](https://github.com/dcvke/horizons-unbound/releases) · [Installation](docs/wiki/Installation.md) · [Settings and commands](docs/wiki/Settings-and-Commands.md) · [Report a bug](https://github.com/dcvke/horizons-unbound/issues)
 
-Free to play, record and stream. For modpacks and other uses, see the [Severed Tomorrow Mod License](LICENSE).
+Free to play, record and stream. For modpacks and other uses, see the [Meridusk Mod License](LICENSE).
