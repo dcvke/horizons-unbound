@@ -67,6 +67,6 @@ Placement protection records blocks placed while the mod is installed. Existing 
 
 ## License
 
-Horizons Unbound is source-available under the custom [Severed Tomorrow Mod License 1.0](LICENSE). The license covers playing, streaming, qualifying free modpacks, addons, resource packs and translations, and restricts redistribution, published modifications and ports. Read the license for the complete terms.
+Horizons Unbound is source-available under the custom [Meridusk Mod License 1.0](LICENSE). The license covers playing, streaming, qualifying free modpacks, addons, resource packs and translations, and restricts redistribution, published modifications and ports. Read the license for the complete terms.
 
 Contributions are welcome through pull requests against the relevant Minecraft branch. Include the loader, Minecraft version and steps to reproduce a bug. Contributions are subject to section 8 of the license.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 — Meridusk
+
+- Updated the studio credit and bundled license to Meridusk. The license terms and gameplay are unchanged.
+
 ## 1.0.2 — End storm shards
 
 - Updated studio credits to Severed Tomorrow and the license identifier to `LicenseRef-Severed-Tomorrow-Mod-License-1.0`.
